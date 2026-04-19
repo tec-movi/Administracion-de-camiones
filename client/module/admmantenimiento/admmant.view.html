@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<!-- Metadatos base y hojas de estilo del módulo -->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Hirata - Administración de Mantenimiento</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	<link rel="stylesheet" href="../../styles/main.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+	<!-- Barra superior con datos de sesión -->
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+		<div class="container-fluid">
+			<span class="navbar-brand">Hirata</span>
+			<div class="d-flex">
+				<span class="navbar-text me-3 text-white" id="nombreUsuario"></span>
+				<span class="badge text-bg-light me-3 align-self-center" id="personajeBadge"></span>
+				<div id="notificationNavSlot" class="me-3 align-self-center"></div>
+				<div id="logoutNavSlot" class="me-3 align-self-center"></div>
+			</div>
+		</div>
+	</nav>
+
+	<main class="container-fluid flex-grow-1 p-3 p-md-4">
+		<section class="container-fluid px-0">
+			<!-- Header y Botón Nuevo Mantenimiento -->
+			<div class="row g-3 mb-3">
+				<div class="col-12 text-end">
+					<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#maintenanceModal" id="btnNewMaintenance">
+						<i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
+					</button>
+				</div>
+			</div>
+
+			<!-- Tabla de Mantenimientos -->
+			<div class="row g-3">
+				<div class="col-12">
+					<div class="card shadow-sm">
+						<div class="card-header bg-white border-bottom-0 pb-0 pt-3">
+							<h3 class="h5 mb-1">Historial de Mantenimientos</h3>
+						</div>
+						<div class="card-body">
+							<div class="table-responsive">
+								<table class="table table-hover align-middle">
+									<thead class="table-light">
+										<tr>
+											<th>ID</th>
+											<th>Camión</th>
+											<th>Kilometraje</th>
+											<th>Tipo</th>
+											<th>Estado</th>
+											<th>Fecha Programada</th>
+											<th>Descripción</th>
+											<th>Acciones</th>
+										</tr>
+									</thead>
+									<tbody id="maintenanceTableBody">
+										<!-- Registros cargados desde JS -->
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Modal Mantenimiento (Crear/Editar) -->
+		<div class="modal fade" id="maintenanceModal" tabindex="-1" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form id="maintenanceForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="maintenanceModalLabel">Registrar Mantenimiento</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<input type="hidden" id="maintenanceId">
+							<div class="mb-3">
+								<label for="truckId" class="form-label">Camión (Placa) *</label>
+								<select class="form-select" id="truckId" required>
+									<!-- Opciones cargadas desde JS -->
+								</select>
+							</div>
+							<div class="mb-3">
+								<label for="maintenanceMileage" class="form-label">Kilometraje Actual *</label>
+								<input type="number" class="form-control" id="maintenanceMileage" required>
+							</div>
+							<div class="mb-3">
+								<label for="maintenanceType" class="form-label">Tipo de Mantenimiento *</label>
+								<select class="form-select" id="maintenanceType" required>
+									<option value="preventivo">Preventivo</option>
+									<option value="correctivo">Correctivo</option>
+								</select>
+							</div>
+							<div class="mb-3">
+								<label for="maintenanceStatus" class="form-label">Estado</label>
+								<select class="form-select" id="maintenanceStatus">
+									<option value="programado">Programado</option>
+									<option value="en curso">En curso</option>
+									<option value="completado">Completado</option>
+								</select>
+							</div>
+							<div class="mb-3">
+								<label for="scheduledDate" class="form-label">Fecha Programada</label>
+								<input type="date" class="form-control" id="scheduledDate">
+							</div>
+							<div class="mb-3">
+								<label for="description" class="form-label">Descripción</label>
+								<textarea class="form-control" id="description" rows="3" required></textarea>
+							</div>
+							<!-- Mensaje de error -->
+							<div id="maintenanceError" class="alert alert-danger d-none" role="alert"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Guardar</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal de Confirmación de Eliminación -->
+		<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Confirmar Eliminación</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<p>¿Estás seguro de que deseas eliminar este registro de mantenimiento?</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+						<button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<!-- Pie de página institucional -->
+	<footer class="bg-dark text-white text-center py-3 mt-auto">
+		<div class="container">
+			<p class="mb-0">© 2026 Transportes Hirata. Todos los derechos reservados.</p>
+		</div>
+	</footer>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+	<!-- Control global de sesión/navbar -->
+	<script type="module" src="../../app/app.js"></script>
+	<!-- Lógica de la vista -->
+	<script type="module" src="../../app/admmant.js"></script>
+</body>
+</html>

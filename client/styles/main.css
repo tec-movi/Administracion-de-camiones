@@ -1,0 +1,201 @@
+/* =========================================
+   1. VARIABLES DE COLOR (IDENTIDAD)
+========================================= */
+:root {
+    --hirata-azul-oscuro: #002B5B;
+    --hirata-azul-claro: #2B4865;
+    --hirata-naranja: #f76c02;
+    --fondo-app: #F5F7FA;
+    --borde-radio: 12px;
+}
+
+/* =========================================
+   2. ESTILOS GENERALES
+========================================= */
+body {
+    background-color: var(--fondo-app);
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* =========================================
+   3. BOTONES & INPUTS
+========================================= */
+.btn-primary {
+    background-color: var(--hirata-azul-oscuro) !important;
+    border-color: var(--hirata-azul-oscuro) !important;
+    border-radius: var(--borde-radio);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--hirata-naranja) !important;
+    border-color: var(--hirata-naranja) !important;
+    transform: translateY(-2px);
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
+
+.form-control:focus {
+    border-color: var(--hirata-naranja);
+    box-shadow: 0 0 0 2px rgba(247, 108, 2, 0.2);
+}
+
+/* =========================================
+   4. CARDS & NAVBAR
+========================================= */
+.card {
+    border-radius: var(--borde-radio);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    border: none;
+}
+
+.navbar {
+    background-color: var(--hirata-azul-oscuro) !important;
+}
+
+/* =========================================
+   5. NOTIFICACIONES (DROPDOWN)
+========================================= */
+.nav-notification-menu {
+    width: min(440px, 92vw);
+    max-height: 420px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+}
+
+.nav-logout-confirm {
+    white-space: nowrap;
+}
+
+.nav-logout-confirm .btn {
+    min-width: 88px;
+}
+
+@media (max-width: 575.98px) {
+    .nav-logout-confirm {
+        justify-content: flex-end;
+        white-space: normal;
+        gap: 6px;
+    }
+
+    .nav-logout-confirm .btn {
+        min-width: 0;
+        padding-inline: 0.65rem;
+    }
+}
+
+.nav-notification-item {
+    border: 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 16px; /* Espaciado uniforme */
+}
+
+.nav-notification-item:last-child {
+    border-bottom: 0;
+}
+
+.nav-notification-item-unread {
+    background: #f0f4f8; /* Fondo sutil para no leídas */
+}
+
+/* SOLUCIÓN AL PROBLEMA VERTICAL: Usamos Flexbox estable */
+.nav-notification-item-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+/* Si el punto no existe, conservamos el espacio invisible para alinear textos */
+.nav-notification-dot-wrapper {
+    width: 8px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    padding-top: 6px;
+}
+
+.nav-notification-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--hirata-naranja);
+}
+
+/* Manejo de textos largos */
+.nav-notification-content {
+    flex-grow: 1;
+    min-width: 0; /* Previene que textos largos rompan el Flexbox */
+}
+
+.nav-notification-content .fw-semibold,
+.nav-notification-content .text-muted {
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.nav-notification-close-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0; /* Evita que el botón se comprima */
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-notification-confirm {
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+/* =========================================
+   6. RESPONSIVE / MÓVIL
+========================================= */
+@media (max-width: 991.98px) {
+    body.mobile-notifications-open {
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    .nav-notification-menu {
+        position: fixed !important; /* Desvincula la caja del navbar */
+        top: 65px !important; /* Lo baja justo debajo de tu navbar */
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important; /* Lo centra de forma absoluta */
+        width: calc(100vw - 32px) !important; /* Le da 16px de margen a cada lado */
+        max-width: 400px;
+        max-height: calc(100dvh - 90px) !important; /* Evita que choque con el fondo */
+        margin-top: 0;
+        border-radius: 12px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
+    }
+
+    .nav-notification-menu .border-bottom {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #ffffff;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .nav-notification-confirm-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
+    }
+}
