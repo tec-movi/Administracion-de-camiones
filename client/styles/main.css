@@ -5,6 +5,9 @@
     --hirata-azul-oscuro: #002B5B;
     --hirata-azul-claro: #2B4865;
     --hirata-naranja: #f76c02;
+    --hirata-azul-oscuro-rgb: 0, 43, 91;
+    --hirata-azul-claro-rgb: 43, 72, 101;
+    --hirata-naranja-rgb: 247, 108, 2;
     --fondo-app: #F5F7FA;
     --borde-radio: 12px;
 }
@@ -14,7 +17,32 @@
 ========================================= */
 body {
     background-color: var(--fondo-app);
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Montserrat', 'Nunito Sans', 'Trebuchet MS', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--hirata-azul-claro);
+}
+
+h1,
+.h1 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+}
+
+h2,
+.h2 {
+    font-size: 1.25rem;
+    line-height: 1.35;
+}
+
+small,
+.small {
+    font-size: 0.85rem;
+}
+
+main.container-fluid,
+main .container-fluid {
+    max-width: 100%;
 }
 
 /* =========================================
@@ -24,23 +52,46 @@ body {
     background-color: var(--hirata-azul-oscuro) !important;
     border-color: var(--hirata-azul-oscuro) !important;
     border-radius: var(--borde-radio);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease-in-out;
 }
 
 .btn-primary:hover {
-    background-color: var(--hirata-naranja) !important;
-    border-color: var(--hirata-naranja) !important;
-    transform: translateY(-2px);
+    background-color: var(--hirata-azul-claro) !important;
+    border-color: var(--hirata-azul-claro) !important;
+    box-shadow: 0 8px 18px rgba(var(--hirata-azul-oscuro-rgb), 0.22);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.btn,
+.btn-outline-secondary,
+.form-control,
+.input-group-text,
+.form-select {
+    transition: all 0.2s ease-in-out;
 }
 
 .form-control {
     border-radius: 8px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.2);
+    min-height: 42px;
 }
 
 .form-control:focus {
     border-color: var(--hirata-naranja);
-    box-shadow: 0 0 0 2px rgba(247, 108, 2, 0.2);
+    box-shadow: 0 0 0 2px rgba(var(--hirata-naranja-rgb), 0.2);
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    border-color: rgba(var(--hirata-azul-oscuro-rgb), 0.3);
+}
+
+.btn-outline-secondary:active {
+    transform: translateY(1px);
 }
 
 /* =========================================
@@ -52,12 +103,314 @@ body {
     border: none;
 }
 
+.card .card-body {
+    padding: 1rem;
+}
+
 .navbar {
     background-color: var(--hirata-azul-oscuro) !important;
 }
 
 /* =========================================
-   5. NOTIFICACIONES (DROPDOWN)
+   5. SIDEBAR ADMIN FLOTA
+========================================= */
+body.sidebar-mobile-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
+body.sidebar-initializing #sidebarCol,
+body.sidebar-initializing #admSidebar,
+body.sidebar-initializing .adm-sidebar-link,
+body.sidebar-initializing .sidebar-backdrop {
+    transition: none !important;
+}
+
+/* --- Columna sidebar --- */
+#sidebarCol {
+    flex: 0 0 260px !important;
+    max-width: 260px !important;
+    min-width: 0;
+    transition: flex-basis 0.24s ease, max-width 0.24s ease, transform 0.24s ease;
+    z-index: 2;
+}
+
+#sidebarCol.is-collapsed {
+    flex: 0 0 80px !important;
+    max-width: 80px !important;
+}
+
+/* --- Columna contenido: ocupa el resto siempre --- */
+#contentCol {
+    flex: 1 1 0 !important;
+    max-width: none !important;
+    min-width: 0;
+}
+
+/* --- Card sidebar --- */
+#admSidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+#admSidebar .card-header {
+    background: linear-gradient(135deg, rgba(var(--hirata-azul-oscuro-rgb), 0.98), rgba(var(--hirata-azul-claro-rgb), 0.96));
+    color: #ffffff;
+    border-bottom: 0;
+    padding: 1rem 1.05rem;
+}
+
+#admSidebar .card-body {
+    padding: 0.9rem;
+}
+
+/* --- Título del sidebar (texto "Menú") --- */
+.adm-sidebar-title {
+    transition: opacity 0.18s ease, max-width 0.18s ease;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* --- Links del sidebar --- */
+.adm-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border: 0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--hirata-azul-claro);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-radius 0.2s ease;
+}
+
+.adm-sidebar-link i {
+    width: 1.25rem;
+    min-width: 1.25rem;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.adm-sidebar-link .adm-sidebar-label {
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.18s ease, max-width 0.18s ease;
+}
+
+.adm-sidebar-link:hover,
+.adm-sidebar-link:focus-visible {
+    color: var(--hirata-azul-oscuro);
+    background: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    box-shadow: 0 4px 12px rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    transform: translateX(2px);
+    outline: none;
+}
+
+.adm-sidebar-link.active {
+    color: var(--hirata-azul-oscuro);
+    background: linear-gradient(135deg, rgba(var(--hirata-naranja-rgb), 0.18), rgba(var(--hirata-naranja-rgb), 0.08));
+    box-shadow: inset 0 0 0 1px rgba(var(--hirata-naranja-rgb), 0.2);
+}
+
+.adm-sidebar-link.active i {
+    color: var(--hirata-naranja);
+}
+
+/* --- Estado colapsado (desktop) --- */
+#sidebarCol.is-collapsed #admSidebar .card-header,
+#sidebarCol.is-collapsed #admSidebar .card-footer {
+    text-align: center;
+    padding-inline: 0.5rem;
+}
+
+#sidebarCol.is-collapsed #admSidebar .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-header {
+    justify-content: center;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-title {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}
+
+#sidebarCol.is-collapsed #admSidebar nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+/* Links en modo colapsado: cuadrado centrado */
+#sidebarCol.is-collapsed .adm-sidebar-link {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 12px;
+    transform: none !important; /* sin desplazamiento lateral */
+    gap: 0;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-link:hover,
+#sidebarCol.is-collapsed .adm-sidebar-link:focus-visible {
+    transform: none !important;
+}
+
+/* Activo colapsado: naranja simétrico */
+#sidebarCol.is-collapsed .adm-sidebar-link.active {
+    background: linear-gradient(135deg, rgba(var(--hirata-naranja-rgb), 0.24), rgba(var(--hirata-naranja-rgb), 0.12));
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hirata-naranja-rgb), 0.22),
+        0 0 16px rgba(var(--hirata-naranja-rgb), 0.18);
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-link.active i,
+#sidebarCol.is-collapsed .adm-sidebar-link i {
+    color: inherit;
+    margin: 0;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-link.active i {
+    color: var(--hirata-naranja);
+}
+
+/* Ocultar etiquetas de texto en colapsado */
+#sidebarCol.is-collapsed .adm-sidebar-link .adm-sidebar-label {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}
+
+/* Ocultar botón toggle desktop dentro del sidebar colapsado */
+#sidebarCol.is-collapsed #toggleSidebarBtn i {
+    transform: scaleX(-1);
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.42);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1040;
+}
+
+.sidebar-backdrop.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* =========================================
+   6. TOASTS / FEEDBACK
+========================================= */
+.hirata-toast-host {
+    min-height: 12px;
+}
+
+.hirata-toast {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.hirata-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hirata-toast.is-leaving {
+    opacity: 0;
+    transform: translateY(-3px);
+}
+
+.hirata-toast-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.hirata-toast-icon {
+    margin-top: 1px;
+    font-size: 1rem;
+}
+
+.hirata-toast-text {
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.hirata-toast-close {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0.1rem;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 6px;
+    line-height: 1;
+}
+
+.hirata-toast-close:hover {
+    background: rgba(var(--hirata-azul-oscuro-rgb), 0.1);
+}
+
+.hirata-toast-success {
+    color: #0f5132;
+    background: rgba(25, 135, 84, 0.12);
+    border-color: rgba(25, 135, 84, 0.24);
+}
+
+.hirata-toast-warning {
+    color: #7a5200;
+    background: rgba(var(--hirata-naranja-rgb), 0.1);
+    border-color: rgba(var(--hirata-naranja-rgb), 0.3);
+}
+
+.hirata-toast-danger {
+    color: #842029;
+    background: rgba(220, 53, 69, 0.12);
+    border-color: rgba(220, 53, 69, 0.28);
+}
+
+.hirata-toast-info,
+.hirata-toast-secondary {
+    color: var(--hirata-azul-oscuro);
+    background: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    border-color: rgba(var(--hirata-azul-oscuro-rgb), 0.25);
+}
+
+.btn.is-processing {
+    cursor: wait;
+}
+
+/* =========================================
+    7. NOTIFICACIONES (DROPDOWN)
 ========================================= */
 .nav-notification-menu {
     width: min(440px, 92vw);
@@ -161,9 +514,108 @@ body {
 }
 
 /* =========================================
-   6. RESPONSIVE / MÓVIL
+       8. RESPONSIVE / MÓVIL
 ========================================= */
 @media (max-width: 991.98px) {
+    main.container-fluid {
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
+    }
+
+    #sidebarCol {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        bottom: 44rem;
+        width: min(84vw, 320px) !important;
+        max-width: min(84vw, 420px) !important;
+        flex: 0 0 auto !important;
+        transform: translateX(calc(-100% - 1rem));
+        z-index: 1042;
+    }
+
+    #sidebarCol.sidebar-mobile-open {
+        transform: translateX(0);
+    }
+
+    /* En móvil el colapso desktop no aplica: ancho siempre completo */
+    #sidebarCol.is-collapsed {
+        flex: 0 0 auto !important;
+        max-width: min(84vw, 320px) !important;
+        width: min(84vw, 320px) !important;
+    }
+
+    /* Links vuelven a su estado expandido en móvil */
+    #sidebarCol.is-collapsed .adm-sidebar-link {
+        width: auto;
+        height: auto;
+        min-width: unset;
+        max-width: unset;
+        padding: 0.75rem 1rem;
+        justify-content: flex-start;
+        gap: 0.8rem;
+    }
+
+    #sidebarCol.is-collapsed .adm-sidebar-link .adm-sidebar-label {
+        opacity: 1;
+        max-width: none;
+        pointer-events: auto;
+    }
+
+    #sidebarCol.is-collapsed .adm-sidebar-title {
+        opacity: 1;
+        max-width: none;
+        pointer-events: auto;
+    }
+
+    #sidebarCol.is-collapsed .adm-sidebar-header {
+        justify-content: space-between;
+    }
+
+    #sidebarCol.is-collapsed #admSidebar .card-body {
+        align-items: stretch;
+        padding: 0.9rem;
+    }
+
+    #sidebarCol.is-collapsed #admSidebar nav {
+        align-items: stretch;
+    }
+
+    #contentCol {
+        max-width: 100% !important;
+        flex-basis: 100% !important;
+    }
+
+    #admSidebar {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #admSidebar .card-body {
+        overflow-y: auto;
+        flex: 1 1 auto;
+    }
+
+    /* Sin desplazamiento lateral en touch */
+    .adm-sidebar-link:hover,
+    .adm-sidebar-link:focus-visible {
+        transform: none !important;
+    }
+
+    .btn {
+        min-height: 44px;
+    }
+
+    .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .table-responsive .table {
+        min-width: 860px;
+    }
+
     body.mobile-notifications-open {
         overflow: hidden;
         touch-action: none;
@@ -197,5 +649,11 @@ body {
         flex-direction: row;
         gap: 8px;
         margin-top: 8px;
+    }
+}
+
+@media (min-width: 768px) {
+    .card .card-body {
+        padding: 1.5rem;
     }
 }

@@ -15,7 +15,7 @@ export default class Maintenance {
 
   getAll = async () => {
     const query = `
-      SELECT m.*, t.plate_number, t.brand, t.model
+      SELECT m.*, t.plate_number, t.brand, t.model, t.status AS truck_status, t.last_maintenance_mileage
       FROM ${this.table} m
       JOIN trucks t ON m.truck_id = t.id
       ORDER BY m.created_at DESC
@@ -29,6 +29,8 @@ export default class Maintenance {
     try {
       await connection.beginTransaction()
 
+      const maintenanceMileage = Number(data.maintenance_mileage)
+
       const query = `UPDATE ${this.table} 
       SET truck_id=?, type=?, scheduled_date=?, description=?, maintenance_mileage=?, status=?
       WHERE id=?`;
@@ -36,9 +38,13 @@ export default class Maintenance {
         data.truck_id, data.type, data.scheduled_date, data.description, data.maintenance_mileage, data.status, id
       ]);
 
-      // Si el administrador cambia el estado a 'completado', actualizamos el camión asociado
+      // DESBLOQUEO: Si el administrador marca como 'completado'
+      // el reset se persiste en trucks para reiniciar el ciclo preventivo.
       if(data.status === 'completado') {
-        // Verificar si el camión tiene un conductor actualmente asignado para restaurarlo a 'en uso' en lugar de 'disponible'
+        if (!Number.isFinite(maintenanceMileage) || maintenanceMileage < 0) {
+          throw new Error('maintenance_mileage es requerido y debe ser un numero valido para completar el mantenimiento')
+        }
+
         const [activeAssignment] = await connection.query(
           `SELECT id FROM truck_driver WHERE truck_id = ? AND active = true LIMIT 1`, 
           [data.truck_id]
@@ -47,15 +53,8 @@ export default class Maintenance {
 
         await connection.query(
           `UPDATE trucks SET last_maintenance_mileage = ?, status = ? WHERE id = ?`, 
-          [data.maintenance_mileage || 0, nextStatus, data.truck_id]
+          [maintenanceMileage, nextStatus, data.truck_id]
         )
-      } else if (data.status === 'en curso' || data.status === 'programado') {
-        // En caso de que se pase a en curso o se reverze a programado, pero ya estaba en otra cosa
-        // se podría hacer lógica adicional. Sin embargo, para mantener funcionalidad simple:
-        // si está en curso forzamos en mantenimiento.
-        if (data.status === 'en curso') {
-            await connection.query(`UPDATE trucks SET status = 'en mantenimiento' WHERE id = ?`, [data.truck_id])
-        }
       }
 
       await connection.commit()
@@ -75,9 +74,27 @@ export default class Maintenance {
   }
   
   startMaintenance = async (id) => {
-    const query = `UPDATE ${this.table} SET status = 'en curso', start_date = NOW() WHERE id = ?`
-    const [result] = await pool.execute(query, [id])
-    return result
+    const connection = await pool.getConnection()
+    try {
+      await connection.beginTransaction()
+      
+      const [rows] = await connection.query(`SELECT truck_id FROM ${this.table} WHERE id = ?`, [id])
+      
+      if (rows.length > 0) {
+        // 1. Marcar mantenimiento como 'en curso'
+        await connection.query(`UPDATE ${this.table} SET status = 'en curso', start_date = NOW() WHERE id = ?`, [id])
+        // 2. Bloquear el camión para el conductor
+        await connection.query(`UPDATE trucks SET status = 'en mantenimiento' WHERE id = ?`, [rows[0].truck_id])
+      }
+
+      await connection.commit()
+      return { success: true }
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
   }
 
   getTruckById = async (truck_id) => {
@@ -91,20 +108,22 @@ export default class Maintenance {
     try {
       await connection.beginTransaction()
 
-      // se marca el mantenimiento como completado
+      const completionMileage = Number(completion_mileage)
+      if (!Number.isFinite(completionMileage) || completionMileage < 0) {
+        throw new Error('completion_mileage es requerido y debe ser un numero valido')
+      }
+
       await connection.query(`UPDATE ${this.table} SET status = 'completado', end_date = NOW() WHERE id = ?`, [id])
 
-      // Consultar si hay un conductor asignado activo para este camión
       const [activeAssignment] = await connection.query(
         `SELECT id FROM truck_driver WHERE truck_id = ? AND active = true LIMIT 1`, 
         [truck_id]
       )
       const nextStatus = activeAssignment.length > 0 ? 'en uso' : 'disponible'
 
-      // se establece el kilometraje actual como el ultimo de mantemiento y el camion se regresa a su estado
       await connection.query(
         `UPDATE trucks SET last_maintenance_mileage = ?, status = ? WHERE id = ?`, 
-        [completion_mileage, nextStatus, truck_id]
+        [completionMileage, nextStatus, truck_id]
       )
 
       await connection.commit()

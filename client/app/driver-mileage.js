@@ -1,4 +1,4 @@
-import { requestJson, setAlert, toDateTimeLocal } from "./shared.js"
+import { clearAlert, requestJson, setAlert, toDateTimeLocal } from "./shared.js"
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -13,7 +13,7 @@ const validateMileageForm = (mileage, date) => {
     return null;
 };
 
-// Consulta el camión asignado al conductor y muestra patente + kilometraje acumulado.
+// Consulta el camión asignado y maneja las alertas de mantenimiento
 const loadAssignedTruck = async (container, alert) => {
     try {
         const data = await requestJson(`${API_BASE}/trucks/my-truck`, {
@@ -23,29 +23,33 @@ const loadAssignedTruck = async (container, alert) => {
         }, "Error al obtener el vehículo")
 
         const truck = data.payload;
+        const submitBtn = document.getElementById("saveMileageBtn");
 
-        // Guarda el kilometraje actual como base para la siguiente comparación en frontend.
         if (container) {
             container.dataset.initialMileage = String(Number(truck.total_mileage || 0));
             container.value = `${truck.plate_number} (${truck.total_mileage} km)`;
         }
 
-        // Validación visual en caso de que esté en mantenimiento
+        // Lógica preventiva no restrictiva
+        const diff = (truck.total_mileage || 0) - (truck.last_maintenance_mileage || 0);
+
         if (truck.status === 'en mantenimiento') {
-            if(alert) setAlert(alert, "⚠️ Tu vehículo se encuentra actualmente 'en mantenimiento'. No puedes registrar kilometraje hasta que sea liberado.", "warning");
-            const submitBtn = document.getElementById("saveMileageBtn");
+            // BLOQUEO TOTAL: El vehículo ya está en manos del taller
+            if(alert) setAlert(alert, "Vehículo en mantenimiento. No puedes registrar kilometraje hasta que el taller lo libere.", "danger");
             if(submitBtn) submitBtn.disabled = true;
-        } else {
-            const submitBtn = document.getElementById("saveMileageBtn");
+        } else if (diff >= 5000) {
+            // ADVERTENCIA: Se superó el umbral y se informa al conductor sin bloquear la operación
+            if(alert) setAlert(alert, "Vehículo ha superado el umbral de 5,000 km. Por favor, diríjase al taller o contacte al Administrador de Mantenimiento para programar su ingreso.", "warning");
             if(submitBtn) submitBtn.disabled = false;
+        } else {
+            // ESTADO NORMAL: Limpieza total del ciclo de alerta tras mantenimiento
+            if(submitBtn) submitBtn.disabled = false;
+            if(alert) clearAlert(alert)
         }
     } catch (error) {
         if (container) {
             container.dataset.initialMileage = "";
             container.value = "Sin vehículo asignado";
-        }
-        if (alert) {
-            console.error("Error cargando camión:", error)
         }
     }
 };
@@ -66,7 +70,6 @@ const submitMileage = async (mileage, date) => {
 
         return { success: true, message: responseData.message || "Kilometraje registrado exitosamente" };
     } catch (error) {
-        // [RF-01] Captura explícita del error validado desde el backend (ej: kilometraje menor al actual).
         return { success: false, message: error.message };
     }
 };
@@ -82,63 +85,70 @@ export function initMileageForm() {
 
     if (!form || !submitBtn) return;
 
-    // Inicializa fecha/hora actual y datos del vehículo.
+    const defaultSubmitLabel = 'Guardar kilometraje'
+    const setSubmitState = ({ disabled, processing = false, processed = false }) => {
+        submitBtn.disabled = disabled
+        submitBtn.classList.remove('is-processing', 'btn-success')
+        submitBtn.classList.add('btn-primary')
+
+        if (processing) {
+            submitBtn.classList.add('is-processing')
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Guardando...'
+            return
+        }
+
+        if (processed) {
+            submitBtn.classList.remove('btn-primary')
+            submitBtn.classList.add('btn-success')
+            submitBtn.innerHTML = '<i class="bi bi-check-circle me-1" aria-hidden="true"></i>Procesado'
+            return
+        }
+
+        submitBtn.innerHTML = defaultSubmitLabel
+    }
+
     if (dateInput) dateInput.value = toDateTimeLocal();
     loadAssignedTruck(assignedTruckContainer, alert);
 
-    // Guarda el kilometraje final del viaje y actualiza la referencia del camión.
     submitBtn.addEventListener("click", async (e) => {
         e.preventDefault();
 
         const error = validateMileageForm(mileageInput.value, dateInput.value);
         if (error) {
-            if (alert) {
-                alert.textContent = error;
-                alert.className = "mt-3 text-danger";
-            }
+            if (alert) setAlert(alert, error, "danger", 0)
             return;
         }
 
-        submitBtn.disabled = true;
+        setSubmitState({ disabled: true, processing: true })
         if (alert) {
-            setAlert(alert, "Guardando...", "info");
+            setAlert(alert, "Guardando kilometraje...", "info", 1500)
         }
 
         const result = await submitMileage(mileageInput.value, dateInput.value);
 
         if (alert) {
-            setAlert(alert, result.message, result.success ? "success" : "danger");
+            setAlert(alert, result.message, result.success ? "success" : "danger", result.success ? 3500 : 0)
         }
 
-        // Se asegura que tras un éxito, re-renderiza el camión con el kilometraje ya impactado en la Base de Datos.
         if (result.success) {
+            setSubmitState({ disabled: true, processed: true })
             mileageInput.value = "";
             if (dateInput) dateInput.value = toDateTimeLocal();
-            
             await loadAssignedTruck(assignedTruckContainer, alert);
+            setTimeout(() => {
+                setSubmitState({ disabled: submitBtn.disabled })
+            }, 1100)
+        } else {
+            setSubmitState({ disabled: false })
         }
-
-        submitBtn.disabled = false;
     });
 
-    // Restablece entradas locales del formulario y vuelve a consultar la información actualizada del camión al back (sincronizando kilometraje).
     if (clearBtn) {
         clearBtn.addEventListener("click", async (e) => {
             e.preventDefault();
-            
             mileageInput.value = "";
             if (dateInput) dateInput.value = toDateTimeLocal();
-            
-            if (alert) {
-                setAlert(alert, "Recargando datos actualizados del vehículo...", "info");
-            }
-            
             await loadAssignedTruck(assignedTruckContainer, alert);
-            
-            if (alert) {
-                setAlert(alert, "Formulario limpio y datos actualizados correctamente", "success");
-                setTimeout(() => { alert.textContent = ""; alert.className = "mt-3 text-secondary"; }, 3000);
-            }
         });
     }
 }

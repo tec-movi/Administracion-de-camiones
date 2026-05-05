@@ -16,4 +16,8 @@ export default class UserRepository extends GenericRepository {
   getUserWithRoleByUserEmail = (email) => {
     return this.dao.getRoleByUserEmail(email)
   }
+
+  getAvailableDrivers = () => {
+    return this.dao.getAvailableDrivers()
+  }
 }

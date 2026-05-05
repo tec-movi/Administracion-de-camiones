@@ -16,4 +16,8 @@ export default class AssignmentRepository extends GenericRepository {
   reassignTruck = async (doc) => {
     return this.dao.reassign(doc)
   }
+
+  unassignTruck = async (doc) => {
+    return this.dao.unassign(doc)
+  }
 }

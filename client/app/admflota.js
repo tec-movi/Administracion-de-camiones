@@ -2,12 +2,53 @@ import { requestJson, setAlert } from "./shared.js"
 
 // Endpoints backend usados por el módulo de administración de flota.
 const API_TRUCKS_URL = 'http://localhost:8000/api/trucks'
-const API_DRIVERS_URL = 'http://localhost:8000/api/users'
+const API_AVAILABLE_DRIVERS_URL = 'http://localhost:8000/api/users/available-drivers'
 const API_REGISTER_URL = 'http://localhost:8000/api/sessions/register'
 const API_ASSIGNMENTS_URL = 'http://localhost:8000/api/assignments'
 
-// Cache local de conductores activos para reutilizar en selects.
-let activeDrivers = []
+const SIDEBAR_PREF_KEY = 'admflota_sidebar_collapsed'
+
+const toPayloadArray = (payload) => (Array.isArray(payload) ? payload : [])
+const toAssignmentBody = (truckId, driverId) => ({
+  driver_id: Number(driverId),
+  truck_id: Number(truckId)
+})
+
+const runAsync = (handler, onError) => async (event) => {
+  try {
+    await handler(event)
+  } catch (error) {
+    onError(error)
+  }
+}
+
+const requestAssignment = async (path, method, body, fallbackError) => {
+  const response = await fetch(`${API_ASSIGNMENTS_URL}/${path}`, {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || fallbackError)
+  }
+
+  return data
+}
+
+const isActiveAssignment = ({ active }) => Boolean(Number(active))
+
+const getAssignmentMapByTruck = (assignments) => {
+  return assignments.reduce((acc, assignment) => {
+    if (isActiveAssignment(assignment)) {
+      acc[assignment.truck_id] = assignment
+    }
+    return acc
+  }, {})
+}
 
 const setTruckAlert = (message, type = 'danger') => {
   setAlert(document.getElementById('truckAlert'), message, type)
@@ -17,66 +58,23 @@ const setDriverAlert = (message, type = 'danger') => {
   setAlert(document.getElementById('driverAlert'), message, type)
 }
 
-// Carga conductores activos desde backend para usar en la tabla de asignación.
-const loadDrivers = async () => {
-  const data = await requestJson(API_DRIVERS_URL, {
-    method: "GET",
-    credentials: "include",
-    headers: { 'Content-type': 'application/json' }
-  }, 'No se pudieron cargar los conductores')
+const getAvailableDrivers = async () => {
+  const data = await requestJson(
+    API_AVAILABLE_DRIVERS_URL,
+    { credentials: 'include' },
+    'No se pudieron cargar los conductores disponibles'
+  )
 
-  const drivers = Array.isArray(data.payload) ? data.payload : []
-  activeDrivers = drivers
-
-  const driverSelect = document.getElementById('truckDriver')
-  if (driverSelect) {
-    driverSelect.innerHTML = '<option value="">Selecciona conductor</option>'
-
-    for (const driver of drivers) {
-      const option = document.createElement('option')
-      option.value = driver.id
-      option.textContent = `${driver.full_name} (${driver.email})`
-      driverSelect.appendChild(option)
-    }
-  }
+  return toPayloadArray(data.payload)
 }
 
-// Construye el select HTML por fila para reasignar conductor en tabla.
-const buildDriverSelect = (truckId, selectedDriverId) => {
-  const container = document.createElement('div')
-  container.className = 'd-flex gap-2'
-
-  const select = document.createElement('select')
-  select.className = 'form-select form-select-sm js-driver-select'
-  select.dataset.truckId = truckId
-
-  const defaultOption = document.createElement('option')
-  defaultOption.value = ''
-  defaultOption.textContent = 'Selecciona conductor'
-  select.appendChild(defaultOption)
-
-  for (const driver of activeDrivers) {
-    const option = document.createElement('option');
-    option.value = driver.id;
-    option.textContent = driver.full_name;
-
-    if (Number(selectedDriverId) === Number(driver.id)) {
-      option.selected = true;
-    }
-
-    select.appendChild(option);
+const buildActionButtonHtml = (truckId, activeAssignment) => {
+  if (!activeAssignment) {
+    return `<button type="button" class="btn btn-primary btn-sm js-open-assign-modal" data-truck-id="${truckId}">Asignar conductor</button>`
   }
 
-  const button = document.createElement('button')
-  button.className = 'btn btn-primary btn-sm js-assign-btn'
-  button.dataset.truckId = truckId
-  button.textContent = 'Asignar'
-
-  container.appendChild(select);
-  container.appendChild(button);
-
-  return container;
-};
+  return `<button type="button" class="btn btn-danger btn-sm js-unassign-btn" data-assignment-id="${activeAssignment.id}">Desvincular</button>`
+}
 
 // Carga listado de camiones y lo renderiza en la tabla principal.
 const loadTrucks = async () => {
@@ -88,25 +86,22 @@ const loadTrucks = async () => {
     requestJson(API_ASSIGNMENTS_URL, { credentials: "include" }, 'No se pudieron cargar las asignaciones')
   ])
 
-  const trucks = Array.isArray(trucksRes.payload) ? trucksRes.payload : []
-  const assignments = Array.isArray(assignmentsRes.payload) ? assignmentsRes.payload : []
-
-  const assignmentMap = {}
-  for (const a of assignments) {
-    assignmentMap[a.truck_id] = a.driver_id
-  }
+  const trucks = toPayloadArray(trucksRes.payload)
+  const assignments = toPayloadArray(assignmentsRes.payload)
+  const assignmentMap = getAssignmentMapByTruck(assignments)
 
   tbody.innerHTML = ''
 
   if (trucks.length === 0) {
     const row = document.createElement('tr')
-    row.innerHTML = '<td colspan="5" class="text-muted">Sin registros</td>'
+    row.innerHTML = '<td colspan="6" class="text-muted">Sin registros</td>'
     tbody.appendChild(row)
     return
   }
 
-  for (const truck of trucks) {
-    const assignedDriverId = assignmentMap[truck.id] || null
+  trucks.forEach((truck) => {
+    const activeAssignment = assignmentMap[truck.id] || null
+    const driverName = activeAssignment?.driver_name || 'Sin asignar'
 
     const row = document.createElement('tr')
 
@@ -115,55 +110,26 @@ const loadTrucks = async () => {
       <td>${truck.brand || '-'}</td>
       <td>${truck.model || '-'}</td>
       <td>${truck.year || '-'}</td>
+      <td>${driverName}</td>
+      <td>${buildActionButtonHtml(truck.id, activeAssignment)}</td>
     `;
 
-    const driverCell = document.createElement('td')
-    driverCell.appendChild(buildDriverSelect(truck.id, assignedDriverId))
-
-    row.appendChild(driverCell)
     tbody.appendChild(row)
-  }
+  })
 };
 
 // Actualiza conductor asignado de un camión puntual.
 const assignTruckToDriver = async (truckId, driverId) => {
-  const response = await fetch(`${API_ASSIGNMENTS_URL}/assign`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      driver_id: Number(driverId),
-      truck_id: Number(truckId)
-    })
-  });
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data.error || 'No se pudo asignar el vehículo')
-  }
-
-  return data
+  return requestAssignment('assign', 'POST', toAssignmentBody(truckId, driverId), 'No se pudo asignar el vehículo')
 };
 
-const reassignTruck = async (truckId, driverId) => {
-  const response = await fetch(`${API_ASSIGNMENTS_URL}/reassign`, {
-    method: "PUT",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      driver_id: Number(driverId),
-      truck_id: Number(truckId)
-    })
-  })
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new Error(data.error || 'No se pudo reasignar')
-  }
-
-  return data
+const unassignTruckFromDriver = async (assignmentId) => {
+  return requestAssignment(
+    'unassign',
+    'PATCH',
+    { assignment_id: Number(assignmentId) },
+    'No se pudo desvincular el conductor'
+  )
 }
 
 // Envía alta de camión nuevo usando datos del formulario.
@@ -225,7 +191,6 @@ const registerDriver = async (event) => {
 
   setDriverAlert('Conductor registrado correctamente', 'success')
   document.getElementById('newDriverForm')?.reset()
-  await loadDrivers()
 }
 
 // Inicializa navegación lateral (secciones + colapso desktop + toggle móvil).
@@ -237,8 +202,51 @@ const initSidebar = () => {
   const sidebarCol = document.getElementById('sidebarCol')
   const sidebar = document.getElementById('admSidebar')
   const contentCol = document.getElementById('contentCol')
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop')
+
+  if (!sidebarCol || !sidebar || !contentCol) return
 
   const isDesktop = () => window.matchMedia('(min-width: 992px)').matches
+
+  const setDesktopSidebarState = (collapsed, persist = true) => {
+    sidebar.classList.toggle('is-collapsed', collapsed)
+    sidebarCol.classList.toggle('is-collapsed', collapsed)
+    toggleBtnDesktop?.setAttribute('aria-expanded', String(!collapsed))
+
+    if (persist) {
+      localStorage.setItem(SIDEBAR_PREF_KEY, collapsed ? 'collapsed' : 'expanded')
+    }
+  }
+
+  const hideMobileSidebar = () => {
+    closeMobileSidebar()
+    sidebarCol.classList.add('d-none')
+  }
+
+  const openMobileSidebar = () => {
+    sidebarCol.classList.remove('d-none')
+    sidebarCol.classList.add('sidebar-mobile-open')
+    sidebarBackdrop?.classList.add('is-visible')
+    document.body.classList.add('sidebar-mobile-open')
+  }
+
+  const closeMobileSidebar = () => {
+    sidebarCol.classList.remove('sidebar-mobile-open')
+    sidebarBackdrop?.classList.remove('is-visible')
+    document.body.classList.remove('sidebar-mobile-open')
+  }
+
+  const syncSidebarForViewport = () => {
+    if (isDesktop()) {
+      closeMobileSidebar()
+      const savedCollapsed = localStorage.getItem(SIDEBAR_PREF_KEY) === 'collapsed'
+      setDesktopSidebarState(savedCollapsed, false)
+      return
+    }
+
+    setDesktopSidebarState(false, false)
+    hideMobileSidebar()
+  }
 
   const showSection = (targetId) => {
     sections.forEach((section) => {
@@ -257,33 +265,49 @@ const initSidebar = () => {
       showSection(targetId)
 
       if (!isDesktop()) {
-        sidebarCol?.classList.add('d-none')
+        hideMobileSidebar()
       }
     })
   })
 
   if (toggleBtnDesktop && sidebarCol && sidebar && contentCol) {
     toggleBtnDesktop.addEventListener('click', () => {
-      const collapsed = sidebar.classList.toggle('is-collapsed')
-      if (collapsed) {
-        sidebarCol.classList.remove('col-lg-3')
-        sidebarCol.classList.add('col-lg-1')
-        contentCol.classList.remove('col-lg-9')
-        contentCol.classList.add('col-lg-11')
-      } else {
-        sidebarCol.classList.remove('col-lg-1')
-        sidebarCol.classList.add('col-lg-3')
-        contentCol.classList.remove('col-lg-11')
-        contentCol.classList.add('col-lg-9')
-      }
+      const collapsed = !sidebar.classList.contains('is-collapsed')
+      setDesktopSidebarState(collapsed)
     })
   }
 
   if (toggleBtnMobile && sidebarCol) {
     toggleBtnMobile.addEventListener('click', () => {
-      sidebarCol.classList.toggle('d-none')
+      const isOpen = sidebarCol.classList.contains('sidebar-mobile-open')
+      if (isOpen) {
+        hideMobileSidebar()
+        return
+      }
+
+      openMobileSidebar()
     })
   }
+
+  sidebarBackdrop?.addEventListener('click', () => {
+    hideMobileSidebar()
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && sidebarCol.classList.contains('sidebar-mobile-open')) {
+      hideMobileSidebar()
+    }
+  })
+
+  window.addEventListener('resize', () => {
+    syncSidebarForViewport()
+  })
+
+  document.body.classList.add('sidebar-initializing')
+  syncSidebarForViewport()
+  requestAnimationFrame(() => {
+    document.body.classList.remove('sidebar-initializing')
+  })
 
   const activeLink = document.querySelector('.adm-sidebar-link.active[data-section-target]')
   showSection(activeLink?.dataset.sectionTarget || 'registerTruckSection')
@@ -292,8 +316,56 @@ const initSidebar = () => {
 document.addEventListener('DOMContentLoaded', async () => {
   initSidebar()
 
+  const assignDriverModalEl = document.getElementById('assignDriverModal')
+  const assignDriverForm = document.getElementById('assignDriverForm')
+  const assignTruckIdInput = document.getElementById('assignTruckId')
+  const assignDriverSelect = document.getElementById('assignDriverSelect')
+  const assignDriverSubmitBtn = document.getElementById('assignDriverSubmitBtn')
+  const assignDriverAlert = document.getElementById('assignDriverAlert')
+  const assignDriverModal = window.bootstrap?.Modal.getOrCreateInstance(assignDriverModalEl)
+
+  const setAssignDriverOptions = (drivers) => {
+    if (!assignDriverSelect) return
+
+    assignDriverSelect.innerHTML = '<option value="">Selecciona conductor</option>'
+
+    drivers.forEach(({ id, full_name }) => {
+      const option = document.createElement('option')
+      option.value = id
+      option.textContent = full_name
+      assignDriverSelect.appendChild(option)
+    })
+  }
+
+  const openAssignModal = async (truckId) => {
+    if (!assignDriverModal || !assignTruckIdInput || !assignDriverSelect || !assignDriverSubmitBtn) {
+      return
+    }
+
+    assignTruckIdInput.value = String(truckId)
+    setAlert(assignDriverAlert, '', 'secondary')
+    assignDriverSelect.disabled = true
+    assignDriverSubmitBtn.disabled = true
+    assignDriverSelect.innerHTML = '<option value="">Cargando...</option>'
+    assignDriverModal.show()
+
+    try {
+      const drivers = await getAvailableDrivers()
+      setAssignDriverOptions(drivers)
+
+      if (drivers.length === 0) {
+        setAlert(assignDriverAlert, 'No hay conductores disponibles para asignar.', 'warning', 0)
+        return
+      }
+
+      assignDriverSelect.disabled = false
+      assignDriverSubmitBtn.disabled = false
+    } catch (error) {
+      setAlert(assignDriverAlert, error.message || 'No se pudieron cargar los conductores disponibles', 'danger', 0)
+    }
+  }
+
   try {
-    await loadDrivers()
     await loadTrucks()
   } catch (error) {
     setTruckAlert(error.message || 'Error al cargar datos iniciales')
@@ -301,63 +373,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const form = document.getElementById('truckForm')
   if (form) {
-    form.addEventListener('submit', async (event) => {
-      try {
-        await registerTruck(event)
-      } catch (error) {
-        showAlert(error.message || 'Error al registrar camión')
-      }
-    })
+    form.addEventListener('submit', runAsync(registerTruck, (error) => {
+      setTruckAlert(error.message || 'Error al registrar camión')
+    }))
   }
 
   const trucksTableBody = document.getElementById('trucksTableBody')
 
   if (trucksTableBody) {
     trucksTableBody.addEventListener('click', async (event) => {
-      const btn = event.target.closest('.js-assign-btn')
-      if (!btn) return
+      const assignBtn = event.target.closest('.js-open-assign-modal')
+      if (assignBtn?.dataset.truckId) {
+        await openAssignModal(assignBtn.dataset.truckId)
+        return
+      }
 
-      const truckId = btn.dataset.truckId
+      const unassignBtn = event.target.closest('.js-unassign-btn')
+      if (unassignBtn?.dataset.assignmentId) {
+        try {
+          await unassignTruckFromDriver(unassignBtn.dataset.assignmentId)
+          setTruckAlert('Conductor desvinculado correctamente', 'success')
+          await loadTrucks()
+        } catch (error) {
+          setTruckAlert(error.message || 'No se pudo desvincular el conductor')
+        }
+      }
+    })
+  }
 
-      const select = trucksTableBody.querySelector(
-        `.js-driver-select[data-truck-id="${truckId}"]`
-      )
+  if (assignDriverForm && assignTruckIdInput && assignDriverSelect) {
+    assignDriverForm.addEventListener('submit', async (event) => {
+      event.preventDefault()
 
-      const driverId = select.value
+      const truckId = assignTruckIdInput.value
+      const driverId = assignDriverSelect.value
 
-      if (!driverId) {
-        setTruckAlert('Selecciona un conductor válido', 'danger')
+      if (!truckId || !driverId) {
+        setAlert(assignDriverAlert, 'Selecciona un conductor válido', 'danger', 0)
         return
       }
 
       try {
         await assignTruckToDriver(truckId, driverId)
+        assignDriverModal?.hide()
+        assignDriverForm.reset()
         setTruckAlert('Vehículo asignado correctamente', 'success')
         await loadTrucks()
       } catch (error) {
-        if (error.message.includes('ya está en uso')) {
-          const confirmReplace = confirm('Este camión ya tiene un conductor asignado. \n¿Deseas reemplazarlo?')
-          if (!confirmReplace) return
-
-          await reassignTruck(truckId, driverId)
-          setTruckAlert('Vehículo reasignado correctamente', 'success')
-          await loadTrucks()
-          return
-        }
-
-        setTruckAlert(error.message || 'No se pudo asignar el vehículo')
+        setAlert(assignDriverAlert, error.message || 'No se pudo asignar el conductor', 'danger', 0)
       }
     })
   }
 
   const newDriverForm = document.getElementById('newDriverForm')
   if (newDriverForm) {
-    newDriverForm.addEventListener('submit', async (event) => {
-      try {
-        await registerDriver(event)
-      } catch (error) {
-        setDriverAlert(error.message || 'Error al registrar conductor')
-      }
-    })
+    newDriverForm.addEventListener('submit', runAsync(registerDriver, (error) => {
+      setDriverAlert(error.message || 'Error al registrar conductor')
+    }))
   }
 })

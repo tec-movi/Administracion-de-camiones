@@ -5,6 +5,15 @@ const getAllUsers = async (req, res) => {
   res.send({ status:"success", payload: users })
 }
 
+const getAvailableDrivers = async (req, res) => {
+  try {
+    const drivers = await usersService.getAvailableDrivers()
+    res.send({ status: 'success', payload: drivers })
+  } catch (error) {
+    res.status(500).send({ status: 'error', error: error.message })
+  }
+}
+
 const getUser = async (req, res) => {
   const userId = req.params.uid
   const user = await usersService.getUserById(userId)
@@ -45,6 +54,7 @@ const deleteUser = async (req, res) => {
 export default {
   getUser,
   getAllUsers,
+  getAvailableDrivers,
   updateUser,
   deleteUser
 }

@@ -1,4 +1,4 @@
-import { requestJson, setAlert } from "./shared.js"
+import { clearAlert, requestJson, setAlert } from "./shared.js"
 
 const API_MAINTENANCE_URL = 'http://localhost:8000/api/maintenances'
 const API_TRUCKS_URL = 'http://localhost:8000/api/trucks'
@@ -16,11 +16,18 @@ let maintenanceToDelete = null
 
 // Alerts
 const showError = (message) => {
-    errorAlert.textContent = message
     errorAlert.classList.remove('d-none')
+    setAlert(errorAlert, message, 'danger', 0)
 }
 const hideError = () => {
+    clearAlert(errorAlert)
     errorAlert.classList.add('d-none')
+}
+
+const getSelectedTruckCurrentMileage = () => {
+    const truckSelect = document.getElementById('truckId')
+    const selectedOption = truckSelect?.options?.[truckSelect.selectedIndex]
+    return Number(selectedOption?.dataset?.mileage)
 }
 
 // Cargar opciones de camiones en el select
@@ -90,7 +97,7 @@ const loadMaintenances = async () => {
         maintenanceTableBody.innerHTML = ''
 
         if (maintenances.length === 0) {
-            maintenanceTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay registros de mantenimiento</td></tr>'
+            maintenanceTableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No hay registros de mantenimiento</td></tr>'
             return
         }
 
@@ -100,6 +107,8 @@ const loadMaintenances = async () => {
                 <td>${m.id}</td>
                 <td>${m.plate_number}</td>
                 <td>${m.maintenance_mileage} km</td>
+                <td>${m.last_maintenance_mileage ?? '-'} km</td>
+                <td>${getStatusBadge(m.truck_status || 'desconocido')}</td>
                 <td><span class="text-capitalize">${m.type}</span></td>
                 <td>${getStatusBadge(m.status)}</td>
                 <td>${formatDate(m.scheduled_date)}</td>
@@ -124,7 +133,7 @@ const loadMaintenances = async () => {
         })
     } catch (error) {
         console.error(error)
-        maintenanceTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error al cargar registros: ${error.message}</td></tr>`
+        maintenanceTableBody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Error al cargar registros: ${error.message}</td></tr>`
     }
 }
 
@@ -175,19 +184,61 @@ maintenanceForm.addEventListener('submit', async (e) => {
     }
 
     try {
-        const url = id ? `${API_MAINTENANCE_URL}/${id}` : API_MAINTENANCE_URL
-        const method = id ? 'PUT' : 'POST'
+        const isEdit = Boolean(id)
+        const isStarting = isEdit && data.status === 'en curso'
+        const isCompleting = isEdit && data.status === 'completado'
 
-        const res = await requestJson(url, {
-            method,
-            credentials: "include",
-            headers: { 'Content-type': 'application/json' },
-            body: JSON.stringify(data)
-        }, 'Error al guardar el mantenimiento')
+        if (isCompleting) {
+            const maintenanceMileage = Number(data.maintenance_mileage)
+            const currentTruckMileage = getSelectedTruckCurrentMileage()
+
+            if (!Number.isFinite(maintenanceMileage) || maintenanceMileage < 0) {
+                throw new Error('Para completar mantenimiento, el kilometraje es obligatorio y debe ser valido')
+            }
+
+            if (!Number.isFinite(currentTruckMileage)) {
+                throw new Error('No se pudo obtener el kilometraje actual del camion seleccionado')
+            }
+
+            if (maintenanceMileage !== currentTruckMileage) {
+                throw new Error(`El kilometraje de cierre debe coincidir con el kilometraje actual del camion (${currentTruckMileage} km)`)
+            }
+        }
+
+        let res
+        if (isStarting) {
+            res = await requestJson(`${API_MAINTENANCE_URL}/${id}/start`, {
+                method: 'PUT',
+                credentials: "include",
+                headers: { 'Content-type': 'application/json' },
+                body: JSON.stringify({ maintenance_id: Number(id) })
+            }, 'Error al iniciar el mantenimiento')
+        } else if (isCompleting) {
+            res = await requestJson(`${API_MAINTENANCE_URL}/${id}/complete`, {
+                method: 'PUT',
+                credentials: "include",
+                headers: { 'Content-type': 'application/json' },
+                body: JSON.stringify({
+                    truck_id: Number(data.truck_id),
+                    maintenance_mileage: Number(data.maintenance_mileage)
+                })
+            }, 'Error al completar el mantenimiento')
+        } else {
+            const url = isEdit ? `${API_MAINTENANCE_URL}/${id}` : API_MAINTENANCE_URL
+            const method = isEdit ? 'PUT' : 'POST'
+
+            res = await requestJson(url, {
+                method,
+                credentials: "include",
+                headers: { 'Content-type': 'application/json' },
+                body: JSON.stringify(data)
+            }, 'Error al guardar el mantenimiento')
+        }
 
         if (res.status === 'success') {
             maintenanceModal.hide()
-            loadMaintenances()
+            await loadTrucksForSelect()
+            await loadMaintenances()
         }
     } catch (error) {
         showError(error.message)

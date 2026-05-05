@@ -35,11 +35,11 @@ const login = async (req, res) => {
     // En caso de que no se encuentre el usuario o que la combinación de usuario y contraseña sea incorrecta se envía un mensaje que solicite rectificar.
     // Por motivos de seguridad NO se entrega información que pueda ser sensible a posibles ataques externos. Si un externo encuentra un email que si está en la base de datos recibirá el mensaje de que la contraseña es incorrecta, lo cual le confirmará que logró decifrar un email correcto. Es por esto que se entrega un mensaje genérico independiente del correo o contraseña.
 
-    if (!user) return res.status(404).send({ status: "error", error: "No se ha encontrado la combinación de usuario y contraseña indicados." })
+    if (!user) return res.status(404).send({ status: "error", error: " No se ha encontrado la combinación de usuario y contraseña indicados." })
   
     // se verifica si el password coincide con el correcto y en caso contrario se informa que alguno de los campos no es correcto para no entregar información sensible.
     const isValid = await passwordValidation(user, password)
-    if (!isValid) return res.status(400).send({ status: "error", error: "No se ha encontrado la combinación de usuario y contraseña indicados." })
+    if (!isValid) return res.status(400).send({ status: "error", error: " No se ha encontrado la combinación de usuario y contraseña indicados." })
     
     // Luego de estas validaciones, se retira de la información del usuario los campos sensibles (password) y se entregan al lado del cliente el resto de los datos para su renderizado
     const userDTO = UserDTO.getUserTokenFrom(user)

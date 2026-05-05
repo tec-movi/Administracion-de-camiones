@@ -5,16 +5,18 @@ const API_LOGIN_URL = "http://localhost:8000/api/sessions/login";
 const DRIVER_VIEW_URL = "module/driver/driver.view.html";
 const ADM_FLOTA_VIEW_URL = "module/admflota/admflota.view.html";
 const ADM_MANT_VIEW_URL = "module/admmantenimiento/admmant.view.html";
+const LOGIN_ERROR_MESSAGE = "Credenciales incorrectas";
+const SERVER_ERROR_MESSAGE = "No se pudo conectar al servidor.";
+
+const ROLE_REDIRECTS = {
+        admin: ADM_FLOTA_VIEW_URL,
+        superadmin: ADM_FLOTA_VIEW_URL,
+        maintenance: ADM_MANT_VIEW_URL,
+        driver: DRIVER_VIEW_URL
+}
+
 // Resuelve la ruta de inicio de acuerdo al rol autenticado.
-const getRedirectByRole = (role) => {
-    const routes = {
-      admin: ADM_FLOTA_VIEW_URL,
-      superadmin: ADM_FLOTA_VIEW_URL,
-      maintenance: ADM_MANT_VIEW_URL,
-      driver: DRIVER_VIEW_URL
-    }
-    return routes[role] || DRIVER_VIEW_URL
-};
+const getRedirectByRole = (role) => ROLE_REDIRECTS[role] || DRIVER_VIEW_URL
 
 // Controla estado visual de carga (overlay + botón deshabilitado).
 const setLoading = (isLoading) => {
@@ -47,12 +49,20 @@ const initPasswordToggle = () => {
 initPasswordToggle();
 
 // Flujo principal de inicio de sesión.
-document.getElementById("loginForm").addEventListener("submit", async function (e) {
+const loginForm = document.getElementById("loginForm")
+
+loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    const usuarioInput = document.getElementById("usuario")
+    const passwordInput = document.getElementById("password")
+    const alerta = document.getElementById("alertaLogin")
+    if (!usuarioInput || !passwordInput || !alerta) return
+
     // Lectura de campos y normalización básica de email.
-    const usuario = document.getElementById("usuario").value.trim().toLowerCase();
-    const password = document.getElementById("password").value;
-    const alerta = document.getElementById("alertaLogin");
+    const usuario = usuarioInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
     // Estado inicial limpio antes del intento de autenticación.
     setAlert(alerta, "", "secondary");
     setLoading(true);
@@ -66,20 +76,21 @@ document.getElementById("loginForm").addEventListener("submit", async function (
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ email: usuario, password })
-        }, "Credenciales incorrectas")
+        }, LOGIN_ERROR_MESSAGE)
+
+        const { status, payload } = data
 
         // Valida contrato de respuesta esperado.
-        if (data.status !== "success" || !data.payload) {
-            setAlert(alerta, "Credenciales incorrectas", "danger");
+        if (status !== "success" || !payload) {
+            setAlert(alerta, LOGIN_ERROR_MESSAGE, "danger");
             return;
         }
-        
-        const perfil = data.payload;
+
         // Persiste perfil para control de sesión y redirige según rol.
-        window.location.href = getRedirectByRole(perfil.role);
+        window.location.href = getRedirectByRole(payload.role);
     } catch (error) {
         // Muestra en pantalla si la "contraseña es incorrecta"
-        setAlert(alerta, error.message || "No se pudo conectar al servidor.", "danger");
+        setAlert(alerta, error.message || SERVER_ERROR_MESSAGE, "danger");
     } finally {
         // Siempre restaura UI al terminar el proceso.
         setLoading(false);

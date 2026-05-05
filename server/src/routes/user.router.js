@@ -5,6 +5,7 @@ import { authorize } from '../middlewares/auth.js'
 const router = Router()
 
 router.get('/', authorize(['admin', 'superadmin']), usersController.getAllUsers)
+router.get('/available-drivers', authorize(['admin', 'superadmin']), usersController.getAvailableDrivers)
 router.get('/:uid', authorize(['admin', 'superadmin']), usersController.getUser)
 router.put('/:uid', authorize(['admin', 'superadmin']), usersController.updateUser)
 
