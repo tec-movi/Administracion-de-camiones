@@ -2,7 +2,7 @@ import { softwareService } from "../../services/index.js";
 
 const registerSoftware = async (req, res) => {
   try {
-    const { name, version, license_type } = req.body
+    const { name, version, license_type, expiration_date } = req.body
     if(!name || !version) {
       return res.status(400).send({ status: 'error', error: 'Campos incompletos.' })
     }
@@ -10,7 +10,8 @@ const registerSoftware = async (req, res) => {
     const software = {
       name,
       version,
-      license_type
+      license_type,
+      expiration_date
     }
 
     const result = await softwareService.create(software)

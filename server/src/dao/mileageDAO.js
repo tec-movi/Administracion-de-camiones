@@ -52,17 +52,24 @@ export default class Mileage {
       )
 
       // Logica de manteninmiento
+      const previousMileageSinceLastService = truck.total_mileage - truck.last_maintenance_mileage
+      const wasAlreadyOverThreshold = previousMileageSinceLastService >= truck.maintenance_threshold
+
       const mileageSinceLastService = mileage_value - truck.last_maintenance_mileage
-      const needsMaintenance = mileageSinceLastService >= truck.maintenance_threshold
+      const isNowOverThreshold = mileageSinceLastService >= truck.maintenance_threshold
+
+      // Solo disparamos la alerta / notificación la PRIMERA vez que cruza el umbral
+      const needsMaintenanceAlert = isNowOverThreshold && !wasAlreadyOverThreshold
 
       // Actualizar camion
+      // (Se mantiene el estado actual en lugar de bloquear forzosamente el camión a 'en mantenimiento')
       await connection.query(
         `UPDATE trucks
         SET total_mileage = ?, status = ?
         WHERE id = ?`,
         [
           mileage_value, 
-          needsMaintenance ? 'en mantenimiento' : 'disponible',
+          truck.status,
           truck.truck_id
         ]
       )
@@ -70,8 +77,8 @@ export default class Mileage {
       // Nota: Eliminamos el cierre de asignación (active = false) al registrar kilometraje
       // para permitir que el conductor pueda seguir viendo y usar el camión asignado (recarga en UI).
       
-      // Generar notificaciones si requiere mantenimiento
-      if(needsMaintenance) {
+      // Generar notificaciones solo la primera vez que requiere mantenimiento
+      if(needsMaintenanceAlert) {
 
         const [scheduledMaintenances] = await connection.query(
           `SELECT scheduled_date FROM maintenances
@@ -113,7 +120,7 @@ export default class Mileage {
       await connection.commit()
       return { 
         success: true,
-        maintenanceAlert: needsMaintenance,
+        maintenanceAlert: isNowOverThreshold,
         details: {
           currentMileage: mileage_value,
           mileageForNextService: Math.max(0, truck.maintenance_threshold - mileageSinceLastService)

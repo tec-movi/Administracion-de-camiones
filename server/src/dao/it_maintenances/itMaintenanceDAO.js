@@ -14,6 +14,18 @@ export default class ItMaintenance {
   getById = async (id) => {
     const query = `SELECT * FROM ${this.table} WHERE id = ?`
     const [result] = await pool.execute(query, [id])
+    
+    if (result.length > 0) {
+      const partsQuery = `
+        SELECT mu.quantity_used, p.part_name 
+        FROM it_maintenance_parts_used mu 
+        JOIN it_parts_inventory p ON mu.part_id = p.id 
+        WHERE mu.maintenance_id = ?
+      `
+      const [parts] = await pool.execute(partsQuery, [id])
+      result[0].parts = parts
+    }
+    
     return result
   }
 

@@ -37,14 +37,15 @@ const loadAssignedTruck = async (container, alert) => {
 
         // Lógica preventiva no restrictiva
         const diff = (truck.total_mileage || 0) - (truck.last_maintenance_mileage || 0);
+        const threshold = truck.maintenance_threshold || 5000;
 
         if (truck.status === 'en mantenimiento') {
             // BLOQUEO TOTAL: El vehículo ya está en manos del taller
             if(alert) setAlert(alert, "Vehículo en mantenimiento. No puedes registrar kilometraje hasta que el taller lo libere.", "danger");
             if(submitBtn) submitBtn.disabled = true;
-        } else if (diff >= 5000) {
+        } else if (diff >= threshold) {
             // ADVERTENCIA: Se superó el umbral y se informa al conductor sin bloquear la operación
-            if(alert) setAlert(alert, "Vehículo ha superado el umbral de 5,000 km. Por favor, diríjase al taller o contacte al Administrador de Mantenimiento para programar su ingreso.", "warning");
+            if(alert) setAlert(alert, `Vehículo ha superado el umbral de mantenimiento preventivo (${threshold} km). Por favor, diríjase al taller o contacte al Administrador de Mantenimiento para programar su ingreso.`, "warning");
             if(submitBtn) submitBtn.disabled = false;
         } else {
             // ESTADO NORMAL: Limpieza total del ciclo de alerta tras mantenimiento

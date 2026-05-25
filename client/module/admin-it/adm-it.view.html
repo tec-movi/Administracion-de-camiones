@@ -58,6 +58,7 @@
                       <th>Estado Equipo</th>
                       <th>Fecha</th>
                       <th>Descripción</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody id="historyTableBody"></tbody>
@@ -130,6 +131,95 @@
               </form>
             </div>
           </div>
+
+          <div class="card adm-section d-none" id="registerEquipmentSection">
+            <div class="card-body">
+              <h4 class="h6 mb-3" id="equipmentFormTitle"><i class="bi bi-plus-square"></i> Registrar Nuevo Equipo</h4>
+              <hr class="my-4" />
+              <div id="responseAlertAddEquipment"></div>
+              <form id="formRegisterEquipment" class="row g-3">
+                <input type="hidden" id="equipmentId" />
+                <div class="col-md-6">
+                  <label for="inventory_code" class="form-label">Código de Inventario</label>
+                  <input type="text" name="inventory_code" id="inventory_code" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="eq_type" class="form-label">Tipo de Equipo</label>
+                  <select name="type" id="eq_type" class="form-select" required>
+                    <option value="PC">PC</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Impresora">Impresora</option>
+                    <option value="Servidor">Servidor</option>
+                    <option value="Switch">Switch</option>
+                    <option value="Access Point">Access Point</option>
+                    <option value="Router">Router</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="equipmentBrand" class="form-label">Marca</label>
+                  <input type="text" name="brand" id="equipmentBrand" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="equipmentModel" class="form-label">Modelo</label>
+                  <input type="text" name="model" id="equipmentModel" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="equipmentSerialNumber" class="form-label">Número de Serie</label>
+                  <input type="text" name="serial_number" id="equipmentSerialNumber" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="equipmentLocation" class="form-label">Ubicación</label>
+                  <input type="text" name="location" id="equipmentLocation" class="form-control" placeholder="Ej: Sala de Informática">
+                </div>
+                <div class="col-12">
+                  <label for="equipmentStatus" class="form-label">Estado</label>
+                  <select name="status" id="equipmentStatus" class="form-select">
+                    <option value="operativo">Operativo</option>
+                    <option value="en reparacion">En reparación</option>
+                    <option value="de baja">De baja</option>
+                  </select>
+                </div>
+                <div class="col-12 mt-3 d-flex gap-2">
+                  <button type="submit" class="btn btn-primary" id="equipmentFormSubmit">Registrar Equipo</button>
+                  <button type="button" class="btn btn-outline-secondary" id="resetEquipmentFormBtn">Limpiar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="card adm-section d-none" id="equipmentsSection">
+             <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                 <h4 class="h6 mb-0"><i class="bi bi-pc-display"></i> Inventario de Equipos</h4>
+             </div>
+              <hr class="my-4" />
+    
+                  <div id="equipmentsAlert" class="mb-3"></div>
+    
+                 <div class="table-responsive px-0">
+                  <table class="table table-hover align-middle text-nowrap">
+                  <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>N° Serie</th>
+                    <th>Estado</th>
+                    <th>Ubicación</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                  </tr>
+                 </thead>
+                 <tbody id="EquipmentsInventoryTableBody"></tbody>
+                </table>
+                </div>
+             </div>
+            
+            </div>
+
         </div>
       </div>
     </section>
@@ -168,6 +258,24 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="button" id="btnConfirmMovement" class="btn btn-primary">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Detalles de Mantenimiento -->
+    <div class="modal fade" id="maintenanceDetailsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title">Detalles del Mantenimiento</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body" id="maintenanceDetailsBody">
+            Cargando detalles...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
           </div>
         </div>
       </div>

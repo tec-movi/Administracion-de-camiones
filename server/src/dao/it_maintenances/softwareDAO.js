@@ -26,11 +26,11 @@ export default class Software {
   }
 
   save = async (data) => {
-    const { name, version, license_type } = data
+    const { name, version, license_type, expiration_date } = data
     const query = `
-    INSERT INTO ${this.table} (name, version, license_type)
-    VALUES (?, ?, ?)`
-    const [result] = await pool.execute(query,[name, version, license_type || null])
+    INSERT INTO ${this.table} (name, version, license_type, expiration_date)
+    VALUES (?, ?, ?, ?)`
+    const [result] = await pool.execute(query,[name, version, license_type || null, expiration_date || null])
     return result
   }
 
