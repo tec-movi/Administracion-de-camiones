@@ -3,44 +3,24 @@ import { clearAlert, requestJson, setAlert } from "./shared.js"
 const API_MAINTENANCE_URL = 'http://localhost:8000/api/maintenances'
 const API_TRUCKS_URL = 'http://localhost:8000/api/trucks'
 
-// DOM Elements
-const maintenanceTableBody = document.getElementById('maintenanceTableBody')
-const maintenanceForm = document.getElementById('maintenanceForm')
-const maintenanceModal = new bootstrap.Modal(document.getElementById('maintenanceModal'))
-const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'))
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn')
-const errorAlert = document.getElementById('maintenanceError')
-const btnNewMaintenance = document.getElementById('btnNewMaintenance')
-
+// ── Variables de estado (no dependen del DOM, pueden vivir a nivel de módulo) ──
 let maintenanceToDelete = null
 let maintenancesCache = []
 
-// Delegación de eventos para la tabla
-maintenanceTableBody.addEventListener('click', (event) => {
-    // Buscar si hicimos clic en el botón de editar
-    const editBtn = event.target.closest('.edit-btn')
-    if (editBtn) {
-        const id = editBtn.dataset.id
-        const m = maintenancesCache.find(mnt => mnt.id == id)
-        if (m) openEditModal(m)
-        return
-    }
+// ── Helpers puros ──────────────────────────────────────────────────────────────
 
-    // Buscar si hicimos clic en el botón de eliminar
-    const deleteBtn = event.target.closest('.delete-btn')
-    if (deleteBtn) {
-        openDeleteModal(deleteBtn.dataset.id)
-    }
-})
-
-// Alerts
-const showError = (message) => {
-    errorAlert.classList.remove('d-none')
-    setAlert(errorAlert, message, 'danger', 0)
+const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString()
 }
-const hideError = () => {
-    clearAlert(errorAlert)
-    errorAlert.classList.add('d-none')
+
+const getStatusBadge = (status) => {
+    const badges = {
+        'programado': 'bg-warning text-dark',
+        'en curso': 'bg-primary',
+        'completado': 'bg-success'
+    }
+    return `<span class="badge ${badges[status] || 'bg-secondary'}">${status.toUpperCase()}</span>`
 }
 
 const getSelectedTruckCurrentMileage = () => {
@@ -49,7 +29,8 @@ const getSelectedTruckCurrentMileage = () => {
     return Number(selectedOption?.dataset?.mileage)
 }
 
-// Cargar opciones de camiones en el select
+// ── Carga de datos ─────────────────────────────────────────────────────────────
+
 const loadTrucksForSelect = async () => {
     try {
         const data = await requestJson(API_TRUCKS_URL, {
@@ -60,7 +41,8 @@ const loadTrucksForSelect = async () => {
 
         const trucks = Array.isArray(data.payload) ? data.payload : []
         const select = document.getElementById('truckId')
-        
+        if (!select) return
+
         select.innerHTML = '<option value="">Seleccione un camión</option>'
         trucks.forEach(truck => {
             const option = document.createElement('option')
@@ -74,37 +56,7 @@ const loadTrucksForSelect = async () => {
     }
 }
 
-// Auto-completar el kilometraje cuando se selecciona un camión
-document.getElementById('truckId').addEventListener('change', (e) => {
-    const selectedOption = e.target.options[e.target.selectedIndex]
-    const currentMileage = selectedOption.dataset.mileage
-    
-    if (currentMileage !== undefined) {
-        document.getElementById('maintenanceMileage').value = currentMileage
-    } else {
-        document.getElementById('maintenanceMileage').value = ''
-    }
-})
-
-// Formatear fechas
-const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleDateString()
-}
-
-// Renderizar estado con badge
-const getStatusBadge = (status) => {
-    const badges = {
-        'programado': 'bg-warning text-dark',
-        'en curso': 'bg-primary',
-        'completado': 'bg-success'
-    }
-    return `<span class="badge ${badges[status] || 'bg-secondary'}">${status.toUpperCase()}</span>`
-}
-
-// Cargar la tabla de mantenimientos
-const loadMaintenances = async () => {
+const loadMaintenances = async (maintenanceTableBody, errorAlert) => {
     try {
         const data = await requestJson(API_MAINTENANCE_URL, {
             method: "GET",
@@ -117,7 +69,8 @@ const loadMaintenances = async () => {
         maintenanceTableBody.innerHTML = ''
 
         if (maintenancesCache.length === 0) {
-            maintenanceTableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No hay registros de mantenimiento</td></tr>'
+            maintenanceTableBody.innerHTML =
+                '<tr><td colspan="10" class="text-center text-muted">No hay registros de mantenimiento</td></tr>'
             return
         }
 
@@ -142,26 +95,20 @@ const loadMaintenances = async () => {
                     </button>
                 </td>
             `
-
             maintenanceTableBody.appendChild(tr)
         })
     } catch (error) {
         console.error(error)
-        maintenanceTableBody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">Error al cargar registros: ${error.message}</td></tr>`
+        maintenanceTableBody.innerHTML =
+            `<tr><td colspan="10" class="text-center text-danger">Error al cargar registros: ${error.message}</td></tr>`
     }
 }
 
-// Abrir modal para crear
-btnNewMaintenance.addEventListener('click', () => {
-    hideError()
-    maintenanceForm.reset()
-    document.getElementById('maintenanceId').value = ''
-    document.getElementById('maintenanceModalLabel').textContent = 'Registrar Mantenimiento'
-})
+// ── Modales ────────────────────────────────────────────────────────────────────
 
-// Abrir modal para editar
-const openEditModal = (maintenance) => {
-    hideError()
+const openEditModal = (maintenance, maintenanceModal, errorAlert) => {
+    clearAlert(errorAlert)
+    errorAlert.classList.add('d-none')
     document.getElementById('maintenanceModalLabel').textContent = 'Editar Mantenimiento'
     document.getElementById('maintenanceId').value = maintenance.id
     document.getElementById('truckId').value = maintenance.truck_id
@@ -172,126 +119,163 @@ const openEditModal = (maintenance) => {
         document.getElementById('scheduledDate').value = maintenance.scheduled_date.split('T')[0]
     }
     document.getElementById('description').value = maintenance.description
-    
     maintenanceModal.show()
 }
 
-// Abrir modal para eliminar
-const openDeleteModal = (id) => {
+const openDeleteModal = (id, deleteModal) => {
     maintenanceToDelete = id
-    // Limpia el alert del modal si existía de un error previo
     const deleteAlert = document.getElementById('deleteAlert')
     if (deleteAlert) deleteAlert.innerHTML = ''
     deleteModal.show()
 }
 
-// Manejar creación / actualización
-maintenanceForm.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    hideError()
 
-    const id = document.getElementById('maintenanceId').value
-    const data = {
-        truck_id: document.getElementById('truckId').value,
-        maintenance_mileage: document.getElementById('maintenanceMileage').value,
-        type: document.getElementById('maintenanceType').value,
-        status: document.getElementById('maintenanceStatus').value,
-        scheduled_date: document.getElementById('scheduledDate').value || null,
-        description: document.getElementById('description').value
-    }
-
-    try {
-        const isEdit = Boolean(id)
-        const isStarting = isEdit && data.status === 'en curso'
-        const isCompleting = isEdit && data.status === 'completado'
-
-        if (isCompleting) {
-            const maintenanceMileage = Number(data.maintenance_mileage)
-            const currentTruckMileage = getSelectedTruckCurrentMileage()
-
-            if (!Number.isFinite(maintenanceMileage) || maintenanceMileage < 0) {
-                throw new Error('Para completar mantenimiento, el kilometraje es obligatorio y debe ser valido')
-            }
-
-            if (!Number.isFinite(currentTruckMileage)) {
-                throw new Error('No se pudo obtener el kilometraje actual del camion seleccionado')
-            }
-
-            if (maintenanceMileage !== currentTruckMileage) {
-                throw new Error(`El kilometraje de cierre debe coincidir con el kilometraje actual del camion (${currentTruckMileage} km)`)
-            }
-        }
-
-        let res
-        if (isStarting) {
-            res = await requestJson(`${API_MAINTENANCE_URL}/${id}/start`, {
-                method: 'PUT',
-                credentials: "include",
-                headers: { 'Content-type': 'application/json' },
-                body: JSON.stringify({ maintenance_id: Number(id) })
-            }, 'Error al iniciar el mantenimiento')
-        } else if (isCompleting) {
-            res = await requestJson(`${API_MAINTENANCE_URL}/${id}/complete`, {
-                method: 'PUT',
-                credentials: "include",
-                headers: { 'Content-type': 'application/json' },
-                body: JSON.stringify({
-                    truck_id: Number(data.truck_id),
-                    maintenance_mileage: Number(data.maintenance_mileage)
-                })
-            }, 'Error al completar el mantenimiento')
-        } else {
-            const url = isEdit ? `${API_MAINTENANCE_URL}/${id}` : API_MAINTENANCE_URL
-            const method = isEdit ? 'PUT' : 'POST'
-
-            res = await requestJson(url, {
-                method,
-                credentials: "include",
-                headers: { 'Content-type': 'application/json' },
-                body: JSON.stringify(data)
-            }, 'Error al guardar el mantenimiento')
-        }
-
-        if (res.status === 'success') {
-            maintenanceModal.hide()
-            await loadTrucksForSelect()
-            await loadMaintenances()
-        }
-    } catch (error) {
-        showError(error.message)
-    }
-})
-
-// Manejar eliminación
-confirmDeleteBtn.addEventListener('click', async () => {
-    if (!maintenanceToDelete) return
-    
-    // Disable button to prevent double-click
-    confirmDeleteBtn.disabled = true
-    try {
-        await requestJson(`${API_MAINTENANCE_URL}/${maintenanceToDelete}`, {
-            method: "DELETE",
-            credentials: "include",
-            headers: { 'Content-type': 'application/json' }
-        }, 'Error al eliminar el mantenimiento')
-
-        deleteModal.hide()
-        loadMaintenances()
-    } catch (error) {
-        const deleteAlert = document.getElementById('deleteAlert');
-        if (deleteAlert) {
-            setAlert(deleteAlert, error.message, 'danger');
-        } else {
-            console.error("Error al eliminar (Agrega un <div id='deleteAlert'> al HTML):", error.message)
-        }
-    } finally {
-        maintenanceToDelete = null
-        confirmDeleteBtn.disabled = false
-    }
-})
-
-// Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    const maintenanceTableBody = document.getElementById('maintenanceTableBody')
+    const maintenanceForm      = document.getElementById('maintenanceForm')
+    const maintenanceModalEl   = document.getElementById('maintenanceModal')
+    const deleteModalEl        = document.getElementById('deleteModal')
+    const confirmDeleteBtn     = document.getElementById('confirmDeleteBtn')
+    const errorAlert           = document.getElementById('maintenanceError')
+    const btnNewMaintenance    = document.getElementById('btnNewMaintenance')
+    const truckIdSelect        = document.getElementById('truckId')
+
+    if (!maintenanceTableBody || !maintenanceModalEl || !deleteModalEl) {
+        console.error('admmant.js: elementos del DOM no encontrados.')
+        return
+    }
+
+    const maintenanceModal = new bootstrap.Modal(maintenanceModalEl)
+    const deleteModal      = new bootstrap.Modal(deleteModalEl)
+
+    const showError = (message) => {
+        errorAlert.classList.remove('d-none')
+        setAlert(errorAlert, message, 'danger', 0)
+    }
+    const hideError = () => {
+        clearAlert(errorAlert)
+        errorAlert.classList.add('d-none')
+    }
+
+    // Auto-completar kilometraje al seleccionar camión
+    truckIdSelect.addEventListener('change', (e) => {
+        const selectedOption = e.target.options[e.target.selectedIndex]
+        const currentMileage = selectedOption.dataset.mileage
+        const mileageInput = document.getElementById('maintenanceMileage')
+        if (mileageInput) {
+            mileageInput.value = currentMileage !== undefined ? currentMileage : ''
+        }
+    })
+
+    // Delegación de eventos en la tabla
+    maintenanceTableBody.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('.edit-btn')
+        if (editBtn) {
+            const m = maintenancesCache.find(mnt => mnt.id == editBtn.dataset.id)
+            if (m) openEditModal(m, maintenanceModal, errorAlert)
+            return
+        }
+        const deleteBtn = event.target.closest('.delete-btn')
+        if (deleteBtn) openDeleteModal(deleteBtn.dataset.id, deleteModal)
+    })
+
+    // Abrir modal para nuevo mantenimiento
+    btnNewMaintenance.addEventListener('click', () => {
+        hideError()
+        maintenanceForm.reset()
+        document.getElementById('maintenanceId').value = ''
+        document.getElementById('maintenanceModalLabel').textContent = 'Registrar Mantenimiento'
+    })
+
+    // Crear / actualizar
+    maintenanceForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        hideError()
+
+        const id = document.getElementById('maintenanceId').value
+        const data = {
+            truck_id: document.getElementById('truckId').value,
+            maintenance_mileage: document.getElementById('maintenanceMileage').value,
+            type: document.getElementById('maintenanceType').value,
+            status: document.getElementById('maintenanceStatus').value,
+            scheduled_date: document.getElementById('scheduledDate').value || null,
+            description: document.getElementById('description').value
+        }
+
+        try {
+            const isEdit       = Boolean(id)
+            const isStarting   = isEdit && data.status === 'en curso'
+            const isCompleting = isEdit && data.status === 'completado'
+
+            if (isCompleting) {
+                const maintenanceMileage  = Number(data.maintenance_mileage)
+                const currentTruckMileage = getSelectedTruckCurrentMileage()
+
+                if (!Number.isFinite(maintenanceMileage) || maintenanceMileage < 0)
+                    throw new Error('Para completar mantenimiento, el kilometraje es obligatorio y debe ser válido')
+
+                if (!Number.isFinite(currentTruckMileage))
+                    throw new Error('No se pudo obtener el kilometraje actual del camión seleccionado')
+
+                if (maintenanceMileage !== currentTruckMileage)
+                    throw new Error(`El kilometraje de cierre debe coincidir con el kilometraje actual del camión (${currentTruckMileage} km)`)
+            }
+
+            let res
+            if (isStarting) {
+                res = await requestJson(`${API_MAINTENANCE_URL}/${id}/start`, {
+                    method: 'PUT', credentials: "include",
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify({ maintenance_id: Number(id) })
+                }, 'Error al iniciar el mantenimiento')
+            } else if (isCompleting) {
+                res = await requestJson(`${API_MAINTENANCE_URL}/${id}/complete`, {
+                    method: 'PUT', credentials: "include",
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify({ truck_id: Number(data.truck_id), maintenance_mileage: Number(data.maintenance_mileage) })
+                }, 'Error al completar el mantenimiento')
+            } else {
+                const url    = isEdit ? `${API_MAINTENANCE_URL}/${id}` : API_MAINTENANCE_URL
+                const method = isEdit ? 'PUT' : 'POST'
+                res = await requestJson(url, {
+                    method, credentials: "include",
+                    headers: { 'Content-type': 'application/json' },
+                    body: JSON.stringify(data)
+                }, 'Error al guardar el mantenimiento')
+            }
+
+            if (res.status === 'success') {
+                maintenanceModal.hide()
+                await loadTrucksForSelect()
+                await loadMaintenances(maintenanceTableBody, errorAlert)
+            }
+        } catch (error) {
+            showError(error.message)
+        }
+    })
+
+    // Confirmar eliminación
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!maintenanceToDelete) return
+        confirmDeleteBtn.disabled = true
+        try {
+            await requestJson(`${API_MAINTENANCE_URL}/${maintenanceToDelete}`, {
+                method: "DELETE", credentials: "include",
+                headers: { 'Content-type': 'application/json' }
+            }, 'Error al eliminar el mantenimiento')
+            deleteModal.hide()
+            await loadMaintenances(maintenanceTableBody, errorAlert)
+        } catch (error) {
+            // FIX #6: deleteAlert ahora existe en el HTML (ver admmant.view.html)
+            const deleteAlert = document.getElementById('deleteAlert')
+            if (deleteAlert) setAlert(deleteAlert, error.message, 'danger')
+        } finally {
+            maintenanceToDelete = null
+            confirmDeleteBtn.disabled = false
+        }
+    })
+
+    // Inicializar
     loadTrucksForSelect()
-    loadMaintenances()
-});
+    loadMaintenances(maintenanceTableBody, errorAlert)
+})

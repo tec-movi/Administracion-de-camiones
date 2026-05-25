@@ -1,4 +1,4 @@
-import {  equipmentSoftwareService } from "../../services/index.js";
+import { equipmentSoftwareService } from "../../services/index.js";
 
 const getAll = async (req, res) => {
   try {
@@ -9,13 +9,15 @@ const getAll = async (req, res) => {
   }
 }
 
+
 const getByRecordId = async (req, res) => {
   try {
-    const record = await equipmentSoftwareService.getById(req.params.id)
-    if (!record) {
-      return res.status(404).send({ status: 'error', error: 'No se encotró el registro por el id especificado.' })
+    const records = await equipmentSoftwareService.dao.getDetailById(req.params.id)
+    if (!records || records.length === 0) {
+      return res.status(404).send({ status: 'error', error: 'Registro no encontrado.' })
     }
-    res.send({ status: 'success', payload: record })
+    // Se envía como array para que el cliente pueda hacer res.payload[0]
+    res.send({ status: 'success', payload: records })
   } catch (error) {
     res.status(500).send({ status: 'error', error: error.message })
   }
@@ -23,7 +25,6 @@ const getByRecordId = async (req, res) => {
 
 const getByEquipment = async (req, res) => {
   try {
-    // Se espera que el usuario seleccione un equipo registrado de una lista desplegable para hacer una consulta a la DB solicitando los softwares registrados en ese equipo, con la intención de poder seleccionar uno de ellos y poder presionar un boton para actualizar/desinstalar el software seleccionado
     const equipmentId = req.params.id
     const installedSoftwares = await equipmentSoftwareService.getByEquipment(equipmentId)
     res.send({ status: 'success', payload: installedSoftwares })
@@ -41,26 +42,11 @@ const registerSoftwareInstallation = async (req, res) => {
       return res.status(400).send({ status: 'error', error: 'Campos incompletos' })
     }
 
-    const data = {
-      equipment_id,
-      software_id,
-      registered_by: userId,
-      install_date,
-      notes
-    }
-
-    const result = equipmentSoftwareService.create(data)
-    res.send({ status: 'success', message: 'Actualización de software registrada.', result_id: result.insertId })
+    const data = { equipment_id, software_id, registered_by: userId, install_date, notes }
+    const result = await equipmentSoftwareService.create(data)
+    res.send({ status: 'success', message: 'Instalación registrada.', result_id: result.insertId })
   } catch (error) {
     res.status(500).send({ status: 'error', error: error.message })
-  }
-}
-
-const updateSoftwareVersion = async (req, res) => {
-  try {
-    
-  } catch (error) {
-    
   }
 }
 
@@ -68,6 +54,5 @@ export default {
   getAll,
   getByRecordId,
   getByEquipment,
-  registerSoftwareInstallation,
-  updateSoftwareVersion
+  registerSoftwareInstallation
 }

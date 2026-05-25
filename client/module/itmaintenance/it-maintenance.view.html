@@ -83,6 +83,33 @@
                     <option value="de baja">Dado de baja</option>
                   </select>
                 </div>
+
+                <!-- Controles para agregar piezas desde la base de datos (RF-09) -->
+                <div class="col-12 mt-3">
+                  <h6 class="mb-2 text-secondary">Piezas Utilizadas (Opcional)</h6>
+                  <div class="row align-items-end g-2 mb-2">
+                    <div class="col-md-7">
+                      <label for="part_select" class="form-label">Seleccionar Pieza</label>
+                      <select id="part_select" class="form-select">
+                        <option value="" selected disabled>Cargando piezas...</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="part_quantity" class="form-label">Cantidad</label>
+                      <input type="number" id="part_quantity" class="form-control" min="1" value="1">
+                    </div>
+                    <div class="col-md-2">
+                      <button type="button" id="btnAddPart" class="btn btn-outline-secondary w-100"><i class="bi bi-cart-plus"></i></button>
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered mt-2">
+                      <thead class="table-light"><tr><th>Pieza</th><th style="width: 100px;">Cant.</th><th style="width: 80px;">Quitar</th></tr></thead>
+                      <tbody id="partsAddedBody"><tr><td colspan="3" class="text-center text-muted">Aún no se han añadido piezas.</td></tr></tbody>
+                    </table>
+                  </div>
+                </div>
+
                 <div class="col-12 mt-4">
                   <button type="submit" class="btn btn-primary w-100">Guardar Registro</button>
                 </div>
@@ -144,6 +171,78 @@
               </form>
             </div>
           </div>
+
+          <!-- Sección: Añadir Software nuevo -->
+          <div class="card adm-section d-none" id="addSoftwareSection">
+            <div class="card-body">
+              <h4 class="h6 mb-3"><i class="bi bi-folder-plus"></i> Añadir Software al Catálogo</h4>
+              <hr class="my-4" />
+              <div id="responseAlertSoftware"></div>
+              <form id="formAddSoftware" class="row g-3">
+                <div class="col-md-6">
+                  <label for="software_name" class="form-label">Nombre del Software</label>
+                  <input type="text" name="name" id="software_name" class="form-control" placeholder="Ej: Microsoft Office, Adobe Photoshop" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="software_version" class="form-label">Versión</label>
+                  <input type="text" name="version" id="software_version" class="form-control" placeholder="Ej: 2021, v24.0">
+                </div>
+                <div class="col-md-6">
+                  <label for="license_type" class="form-label">Tipo de Licencia</label>
+                  <select name="license_type" id="license_type" class="form-select" required>
+                    <option value="" selected disabled>Seleccione...</option>
+                    <option value="OEM">OEM</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Suscripción">Suscripción</option>
+                    <option value="Open Source">Open Source</option>
+                    <option value="Freeware">Freeware</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="expiration_date" class="form-label">Fecha de Expiración (Opcional)</label>
+                  <input type="date" name="expiration_date" id="expiration_date" class="form-control">
+                </div>
+                <div class="col-12 mt-3">
+                  <button type="submit" class="btn btn-primary w-100">Guardar Software</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Sección: Instalar Software -->
+          <div class="card adm-section d-none" id="installSoftwareSection">
+            <div class="card-body">
+              <h4 class="h6 mb-3"><i class="bi bi-file-earmark-arrow-down"></i> Implementar Software en Equipo</h4>
+              <hr class="my-4" />
+              <div id="responseAlertInstall"></div>
+              <form id="formInstallSoftware" class="row g-3">
+                <div class="col-md-6">
+                  <label for="install_equipment_id" class="form-label">Seleccionar Equipo</label>
+                  <select id="install_equipment_id" name="equipment_id" class="form-select" required>
+                    <option value="" selected disabled>Cargando equipos...</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="install_software_id" class="form-label">Seleccionar Software</label>
+                  <select id="install_software_id" name="software_id" class="form-select" required>
+                    <option value="" selected disabled>Cargando software...</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label for="install_notes" class="form-label">Notas / Observaciones</label>
+                  <textarea name="notes" id="install_notes" class="form-control" rows="2" placeholder="Opcional. Ej: Clave de activación usada, problemas durante instalación..."></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label for="install_date" class="form-label">Fecha de Instalación / Asignación</label>
+                  <input type="date" name="install_date" id="install_date" class="form-control" required>
+                </div>
+                <div class="col-12 mt-3">
+                  <button type="submit" class="btn btn-primary w-100">Registrar Instalación</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
           <!-- Sección: Historial de Software instalado en Equipos -->
           <div class="card adm-section d-none" id="historySoftwareSection">
             <div class="card-body">
@@ -170,7 +269,20 @@
             </div>
           </div>
 
-          <!-- Modal de cambio de estado eliminado: la BD no tiene campo 'status' -->
+          <!-- Modales -->
+          <div class="modal fade" id="softwareDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Detalles de Instalación de Software</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                  <div id="softwareDetailsContent">Cargando detalles...</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
     </section>
   </main>

@@ -155,7 +155,6 @@ export default class Assignment {
     return result[0]
   }
 
-  // TODO: agregar metodo para cambiar estado de asignamiento en tabla trucks
   unassign = async ({ assignment_id }) => {
     const connection = await pool.getConnection()
 

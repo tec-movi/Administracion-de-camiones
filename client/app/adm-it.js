@@ -12,18 +12,18 @@ export async function init() {
         { label: 'Registrar Pieza', icon: 'bi bi-plus-square', target: 'registerPartSection', active: false }
     ], 'adm_it_sidebar_collapsed')
 
-    const historyTableBody = document.getElementById('historyTableBody')
+    const historyTableBody        = document.getElementById('historyTableBody')
     const partsInventoryTableBody = document.getElementById('partsInventoryTableBody')
-    const partAlert = document.getElementById('partsAlert')
-    const partForm = document.getElementById('formRegisterPart')
-    const partFormTitle = document.getElementById('partFormTitle')
-    const partFormSubmit = document.getElementById('partFormSubmit')
-    const partIdInput = document.getElementById('partId')
-    const resetPartFormBtn = document.getElementById('resetPartFormBtn')
-    const stockModalEl = document.getElementById('partStockModal')
-    const stockModal = stockModalEl ? new bootstrap.Modal(stockModalEl) : null
-    const stockForm = document.getElementById('formPartStockMovement')
-    const equipmentCache = new Map()
+    const partForm                = document.getElementById('formRegisterPart')
+    const partFormTitle           = document.getElementById('partFormTitle')
+    const partFormSubmit          = document.getElementById('partFormSubmit')
+    const partIdInput             = document.getElementById('partId')
+    const resetPartFormBtn        = document.getElementById('resetPartFormBtn')
+    const stockModalEl            = document.getElementById('partStockModal')
+    const stockModal              = stockModalEl ? new bootstrap.Modal(stockModalEl) : null
+    const stockForm               = document.getElementById('formPartStockMovement')
+    const btnConfirmMovement      = document.getElementById('btnConfirmMovement')
+    const equipmentCache          = new Map()
     let editingPartId = null
 
     const setFeedback = (message, type = 'danger', target = 'partsAlert') => {
@@ -39,18 +39,16 @@ export async function init() {
         if (partFormSubmit) partFormSubmit.textContent = 'Registrar Pieza'
     }
 
-    if (resetPartFormBtn) {
-        resetPartFormBtn.addEventListener('click', resetPartForm)
-    }
+    if (resetPartFormBtn) resetPartFormBtn.addEventListener('click', resetPartForm)
+
+    // ── Carga de datos ───────────────────────────────────────────────────────
 
     const loadEquipments = async () => {
         try {
             const response = await requestJson(API_EQUIPMENTS_URL, { credentials: 'include' }, 'No se pudieron cargar los equipos')
             const equipments = Array.isArray(response.payload) ? response.payload : []
             equipmentCache.clear()
-            equipments.forEach((equipment) => {
-                equipmentCache.set(String(equipment.id), equipment)
-            })
+            equipments.forEach(eq => equipmentCache.set(String(eq.id), eq))
         } catch (error) {
             console.error(error)
         }
@@ -60,17 +58,18 @@ export async function init() {
         if (!historyTableBody) return
         try {
             const response = await requestJson(API_MAINTENANCES_URL, { credentials: 'include' }, 'No se pudieron cargar los mantenimientos')
-            const records = Array.isArray(response.payload) ? response.payload : []
+            const records  = Array.isArray(response.payload) ? response.payload : []
             historyTableBody.innerHTML = ''
 
             if (records.length === 0) {
-                historyTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No hay registros de mantenimiento.</td></tr>'
+                historyTableBody.innerHTML =
+                    '<tr><td colspan="9" class="text-center text-muted">No hay registros de mantenimiento.</td></tr>'
                 return
             }
 
-            records.forEach((record) => {
+            records.forEach(record => {
                 const equipment = equipmentCache.get(String(record.equipment_id)) || {}
-                const row = document.createElement('tr')
+                const row       = document.createElement('tr')
                 row.innerHTML = `
                     <td>${escapeHtml(record.id)}</td>
                     <td>${escapeHtml(equipment.inventory_code || record.equipment_id)}</td>
@@ -85,14 +84,13 @@ export async function init() {
                 historyTableBody.appendChild(row)
             })
         } catch (error) {
-            if (historyTableBody) {
-                historyTableBody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error al cargar historial: ${escapeHtml(error.message)}</td></tr>`
-            }
+            historyTableBody.innerHTML =
+                `<tr><td colspan="9" class="text-center text-danger">Error al cargar historial: ${escapeHtml(error.message)}</td></tr>`
         }
     }
 
     const getPartStatus = (part) => {
-        const stock = Number(part.stock_quantity || 0)
+        const stock    = Number(part.stock_quantity || 0)
         const critical = Number(part.critical_stock ?? part.min_stock ?? 0)
         return stock <= critical
             ? '<span class="badge bg-danger">Crítico</span>'
@@ -103,15 +101,16 @@ export async function init() {
         if (!partsInventoryTableBody) return
         try {
             const response = await requestJson(API_PARTS_URL, { credentials: 'include' }, 'No se pudo cargar el inventario')
-            const parts = Array.isArray(response.payload) ? response.payload : []
+            const parts    = Array.isArray(response.payload) ? response.payload : []
             partsInventoryTableBody.innerHTML = ''
 
             if (parts.length === 0) {
-                partsInventoryTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No hay registros de piezas.</td></tr>'
+                partsInventoryTableBody.innerHTML =
+                    '<tr><td colspan="8" class="text-center text-muted">No hay registros de piezas.</td></tr>'
                 return
             }
 
-            parts.forEach((part) => {
+            parts.forEach(part => {
                 const row = document.createElement('tr')
                 row.innerHTML = `
                     <td>${escapeHtml(part.id)}</td>
@@ -122,92 +121,81 @@ export async function init() {
                     <td>${Number(part.unit_price || 0).toLocaleString('es-CL')}</td>
                     <td>${getPartStatus(part)}</td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-success me-1" data-action="movement-in" data-id="${part.id}" title="Registrar ingreso"><i class="bi bi-plus-lg"></i></button>
-                        <button type="button" class="btn btn-sm btn-warning me-1" data-action="movement-out" data-id="${part.id}" title="Registrar salida"><i class="bi bi-dash-lg"></i></button>
-                        <button type="button" class="btn btn-sm btn-outline-primary me-1" data-action="edit-part" data-id="${part.id}" title="Editar"><i class="bi bi-pencil"></i></button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-part" data-id="${part.id}" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        <button type="button" class="btn btn-sm btn-success me-1" data-action="movement-in"  data-id="${part.id}" title="Ingreso"><i class="bi bi-plus-lg"></i></button>
+                        <button type="button" class="btn btn-sm btn-warning me-1" data-action="movement-out" data-id="${part.id}" title="Salida"><i class="bi bi-dash-lg"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-primary me-1" data-action="edit-part"   data-id="${part.id}" title="Editar"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-danger"        data-action="delete-part" data-id="${part.id}" title="Eliminar"><i class="bi bi-trash"></i></button>
                     </td>
                 `
                 partsInventoryTableBody.appendChild(row)
             })
         } catch (error) {
-            if (partsInventoryTableBody) {
-                partsInventoryTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error al cargar inventario: ${escapeHtml(error.message)}</td></tr>`
-            }
+            partsInventoryTableBody.innerHTML =
+                `<tr><td colspan="8" class="text-center text-danger">Error al cargar inventario: ${escapeHtml(error.message)}</td></tr>`
         }
     }
 
+    // ── Modal de movimiento de stock ─────────────────────────────────────────
+
     const openStockModal = (partId, mode) => {
         if (!stockForm || !stockModal) return
-        document.getElementById('movement_part_id').value = String(partId)
-        document.getElementById('movement_type').value = mode === 'out' ? 'salida' : 'ingreso'
-        document.getElementById('movement_quantity').value = 1
-        document.getElementById('movement_date').value = toDateTimeLocal(new Date())
-        document.getElementById('movement_notes').value = ''
+        document.getElementById('movement_part_id').value    = String(partId)
+        document.getElementById('movement_type').value       = mode === 'out' ? 'salida' : 'ingreso'
+        document.getElementById('movement_quantity').value   = 1
+        document.getElementById('movement_date').value       = toDateTimeLocal(new Date())
+        document.getElementById('movement_notes').value      = ''
         stockModal.show()
     }
 
     const submitStockMovement = async () => {
-        const partId = document.getElementById('movement_part_id').value
+        const partId       = document.getElementById('movement_part_id').value
         const movementType = document.getElementById('movement_type').value
-        const quantity = Number(document.getElementById('movement_quantity').value || 0)
-        const date = document.getElementById('movement_date').value
-        const notes = document.getElementById('movement_notes').value
+        const quantity     = Number(document.getElementById('movement_quantity').value || 0)
+        const date         = document.getElementById('movement_date').value
+        const notes        = document.getElementById('movement_notes').value
 
         if (!partId || !Number.isFinite(quantity) || quantity <= 0) {
             throw new Error('Completa una cantidad válida')
         }
 
-        const partRes = await requestJson(`${API_PARTS_URL}/${partId}`, { credentials: 'include' }, 'No se pudo leer la pieza')
-        const part = partRes.payload || partRes
+        const partRes    = await requestJson(`${API_PARTS_URL}/${partId}`, { credentials: 'include' }, 'No se pudo leer la pieza')
+        const part       = partRes.payload || partRes
         const currentStock = Number(part.stock_quantity || 0)
-        const newStock = movementType === 'salida' ? currentStock - quantity : currentStock + quantity
+        const newStock     = movementType === 'salida' ? currentStock - quantity : currentStock + quantity
 
-        if (newStock < 0) {
-            throw new Error('Stock insuficiente para esta salida')
-        }
+        if (newStock < 0) throw new Error('Stock insuficiente para esta salida')
 
         try {
             await requestJson(`${API_PARTS_URL}/${partId}/movements`, {
-                method: 'POST',
-                credentials: 'include',
+                method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: movementType, quantity, date, notes })
             }, 'No se pudo registrar el movimiento')
-        } catch (error) {
-            console.warn(error)
-        }
+        } catch (_) { /* endpoint opcional, no bloquea */ }
 
         await requestJson(`${API_PARTS_URL}/${partId}`, {
-            method: 'PUT',
-            credentials: 'include',
+            method: 'PUT', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                part_name: part.part_name || part.name,
-                description: part.description || '',
+                part_name:      part.part_name || part.name,
+                description:    part.description || '',
                 stock_quantity: newStock,
-                min_stock: part.min_stock ?? part.critical_stock ?? 0,
-                unit_price: part.unit_price || 0
+                min_stock:      part.min_stock ?? part.critical_stock ?? 0,
+                unit_price:     part.unit_price || 0
             })
         }, 'No se pudo actualizar el stock')
     }
+
+    // ── Eventos de la tabla de piezas ────────────────────────────────────────
 
     if (partsInventoryTableBody) {
         partsInventoryTableBody.addEventListener('click', async (event) => {
             const button = event.target.closest('[data-action]')
             if (!button) return
-
             const partId = button.dataset.id
 
-            if (button.dataset.action === 'movement-in') {
-                openStockModal(partId, 'in')
-                return
-            }
-
-            if (button.dataset.action === 'movement-out') {
-                openStockModal(partId, 'out')
-                return
-            }
+            if (button.dataset.action === 'movement-in') { openStockModal(partId, 'in'); return }
+            if (button.dataset.action === 'movement-out') { openStockModal(partId, 'out'); return }
 
             if (button.dataset.action === 'delete-part') {
                 if (!confirm('¿Eliminar esta pieza? Esta acción no se puede deshacer.')) return
@@ -219,58 +207,70 @@ export async function init() {
 
             if (button.dataset.action === 'edit-part') {
                 const response = await requestJson(`${API_PARTS_URL}/${partId}`, { credentials: 'include' }, 'No se pudo cargar la pieza')
-                const part = response.payload || response
-                editingPartId = partId
-                if (partIdInput) partIdInput.value = String(partId)
-                if (partFormTitle) partFormTitle.textContent = 'Editar Pieza'
+                const part     = response.payload || response
+                editingPartId  = partId
+                if (partIdInput)    partIdInput.value    = String(partId)
+                if (partFormTitle)  partFormTitle.textContent  = 'Editar Pieza'
                 if (partFormSubmit) partFormSubmit.textContent = 'Actualizar Pieza'
-                document.getElementById('part_name').value = part.part_name || part.name || ''
+                document.getElementById('part_name').value        = part.part_name || part.name || ''
                 document.getElementById('part_description').value = part.description || ''
-                document.getElementById('stock_quantity').value = part.stock_quantity ?? 0
-                document.getElementById('critical_stock').value = part.min_stock ?? part.critical_stock ?? 0
-                document.getElementById('unit_price').value = part.unit_price ?? 0
+                document.getElementById('stock_quantity').value   = part.stock_quantity ?? 0
+                document.getElementById('critical_stock').value   = part.min_stock ?? part.critical_stock ?? 0
+                document.getElementById('unit_price').value       = part.unit_price ?? 0
                 document.querySelector('[data-section-target="registerPartSection"]')?.click()
             }
         })
     }
 
+    // ── Formulario de registro/edición de pieza ──────────────────────────────
+
     if (partForm) {
         partForm.addEventListener('submit', async (event) => {
             event.preventDefault()
             const formData = new FormData(partForm)
-            const data = Object.fromEntries(formData.entries())
-            const payload = {
-                part_name: data.part_name,
-                description: data.description || '',
+            const data     = Object.fromEntries(formData.entries())
+            const payload  = {
+                part_name:      data.part_name,
+                description:    data.description || '',
                 stock_quantity: Number(data.stock_quantity || 0),
-                min_stock: Number(data.critical_stock || 0),
-                unit_price: Number(data.unit_price || 0)
+                min_stock:      Number(data.critical_stock || 0),
+                unit_price:     Number(data.unit_price || 0)
             }
 
             const isEditing = Boolean(editingPartId)
-            const url = isEditing ? `${API_PARTS_URL}/${editingPartId}` : API_PARTS_URL
-            const method = isEditing ? 'PUT' : 'POST'
+            const url       = isEditing ? `${API_PARTS_URL}/${editingPartId}` : API_PARTS_URL
+            const method    = isEditing ? 'PUT' : 'POST'
 
             await requestJson(url, {
-                method,
-                credentials: 'include',
+                method, credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             }, isEditing ? 'No se pudo actualizar la pieza' : 'No se pudo registrar la pieza')
 
-            setFeedback(isEditing ? 'Pieza actualizada.' : 'Pieza registrada correctamente.', 'success', 'responseAlertPart')
+            setFeedback(
+                isEditing ? 'Pieza actualizada.' : 'Pieza registrada correctamente.',
+                'success',
+                'responseAlertPart'
+            )
             resetPartForm()
             await loadPartsInventory()
         })
     }
 
-    if (stockForm) {
-        stockForm.addEventListener('submit', async (event) => {
-            event.preventDefault()
-            await submitStockMovement()
-            stockModal?.hide()
-            setFeedback('Movimiento registrado y stock actualizado.', 'success')
-            await loadPartsInventory()
+
+    if (btnConfirmMovement) {
+        btnConfirmMovement.addEventListener('click', async () => {
+            try {
+                btnConfirmMovement.disabled = true
+                await submitStockMovement()
+                stockModal?.hide()
+                setFeedback('Movimiento registrado y stock actualizado.', 'success')
+                await loadPartsInventory()
+            } catch (error) {
+                setFeedback(error.message, 'danger')
+            } finally {
+                btnConfirmMovement.disabled = false
+            }
         })
     }
 
