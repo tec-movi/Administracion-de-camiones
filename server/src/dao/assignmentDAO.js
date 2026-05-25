@@ -7,17 +7,7 @@ export default class Assignment {
   }
 
   get = async () => {
-    const query = `
-      SELECT
-        td.*, 
-        u.full_name AS driver_name,
-        t.plate_number,
-        t.status AS truck_status
-      FROM ${this.table} td
-      INNER JOIN users u ON u.id = td.driver_id
-      INNER JOIN trucks t ON t.id = td.truck_id
-      ORDER BY td.assigned_at DESC
-    `
+    const query = `SELECT * FROM ${this.table}`
     const [result] = await pool.execute(query)
     return result
   }
@@ -64,7 +54,7 @@ export default class Assignment {
       )
 
       if (driverActive.length > 0) {
-        throw new Error('El conductor ya tiene un vehículo asignado')
+        throw new Error('El conductor ya tiene un camión asignado')
       }
 
       // Validar truck sin asignación activa
@@ -153,55 +143,6 @@ export default class Assignment {
     }
   }
 
-  unassign = async ({ assignment_id }) => {
-    const connection = await pool.getConnection()
-
-    try {
-      await connection.beginTransaction()
-
-      const [assignmentRows] = await connection.query(
-        `SELECT id, truck_id, active FROM truck_driver WHERE id = ? FOR UPDATE`,
-        [assignment_id]
-      )
-
-      if (assignmentRows.length === 0) {
-        throw new Error('La asignación no existe')
-      }
-
-      const [{ truck_id, active }] = assignmentRows
-
-      if (!active) {
-        throw new Error('La asignación ya se encuentra desvinculada')
-      }
-
-      const [result] = await connection.query(
-        `UPDATE truck_driver
-        SET active = false, ended_at = NOW()
-        WHERE id = ? AND active = true`,
-        [assignment_id]
-      )
-
-      if (result.affectedRows === 0) {
-        throw new Error('No se pudo desvincular la asignación')
-      }
-
-      await connection.query(
-        `UPDATE trucks
-        SET status = 'disponible'
-        WHERE id = ? AND status = 'en uso'`,
-        [truck_id]
-      )
-
-      await connection.commit()
-      return result
-    } catch (error) {
-      await connection.rollback()
-      throw error
-    } finally {
-      connection.release()
-    }
-  }
-
   getTruckByDriver = async (driver_id) => {
     const query = `
       SELECT t.*
@@ -215,4 +156,38 @@ export default class Assignment {
   }
 
   // TODO: agregar metodo para cambiar estado de asignamiento en tabla trucks
+  unassign = async ({ assignment_id }) => {
+    const connection = await pool.getConnection()
+
+    try {
+      await connection.beginTransaction()
+
+      const [assignmentData] = await connection.query(
+        `SELECT truck_id, driver_id, active FROM truck_driver WHERE id = ? FOR UPDATE`,
+        [assignment_id]
+      )
+
+      if (assignmentData.length === 0) throw new Error('Asignación no encontrada')
+      const assignment = assignmentData[0]
+
+      if (!assignment.active) throw new Error('La asignación ya fue finalizada')
+
+      // Marcar asignación como inactiva
+      const [result] = await connection.query(
+        `UPDATE truck_driver SET active = false, ended_at = NOW() WHERE id = ?`,
+        [assignment_id]
+      )
+
+      // Actualizar estado del camión a disponible
+      await connection.query(`UPDATE trucks SET status = 'disponible' WHERE id = ?`, [assignment.truck_id])
+
+      await connection.commit()
+      return result
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+  }
 }

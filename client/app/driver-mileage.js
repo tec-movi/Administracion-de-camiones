@@ -2,14 +2,19 @@ import { clearAlert, requestJson, setAlert, toDateTimeLocal } from "./shared.js"
 
 const API_BASE = "http://localhost:8000/api";
 
-const validateMileageForm = (mileage, date) => {
+const validateMileageForm = (mileage, date, initialMileage) => {
     const mileageNum = parseInt(mileage, 10);
+    const currentTotal = parseInt(initialMileage, 10) || 0;
+
     if (isNaN(mileageNum) || mileageNum <= 0) {
         return "El kilometraje debe ser un número mayor a 0";
     }
-    if (!date) {
-        return "La fecha del recorrido es requerida";
+    
+    if (mileageNum <= currentTotal) {
+        return `El kilometraje debe ser mayor al actual (${currentTotal} km)`;
     }
+
+    if (!date) return "La fecha del recorrido es requerida";
     return null;
 };
 
@@ -113,7 +118,8 @@ export function initMileageForm() {
     submitBtn.addEventListener("click", async (e) => {
         e.preventDefault();
 
-        const error = validateMileageForm(mileageInput.value, dateInput.value);
+        const currentMileage = assignedTruckContainer.dataset.initialMileage;
+        const error = validateMileageForm(mileageInput.value, dateInput.value, currentMileage);
         if (error) {
             if (alert) setAlert(alert, error, "danger", 0)
             return;

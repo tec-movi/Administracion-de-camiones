@@ -43,21 +43,18 @@ const reassignTruck = async (req, res) => {
 const unassignTruck = async (req, res) => {
   try {
     const { assignment_id } = req.body
+    if(!assignment_id) return res.status(400).send({ status: 'error', error: 'assignment_id requerido' })
 
-    if (!assignment_id) {
-      return res.status(400).send({ status: 'error', error: 'Datos incompletos' })
-    }
-
-    await assignmentService.unassignTruck({ assignment_id })
-    res.send({ status: 'success', message: 'Conductor desvinculado correctamente' })
+    const result = await assignmentService.unassignTruck({ assignment_id })
+    res.send({ status: 'success', message: 'Asignación finalizada correctamente', result_id: result.affectedRows ? assignment_id : null })
   } catch (error) {
     res.status(400).send({ status: 'error', error: error.message })
   }
 }
 
 export default {
+  unassignTruck,
   assignTruck,
   getAllAssignments,
-  reassignTruck,
-  unassignTruck
+  reassignTruck
 }

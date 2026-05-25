@@ -12,7 +12,7 @@ INSERT INTO roles (name) VALUES
 ('superadmin'),
 ('driver'),
 ('maintenance'),
-('developer');
+('it_tech');
 
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -98,6 +98,78 @@ CREATE TABLE maintenance_logs (
   FOREIGN KEY (maintenance_id) REFERENCES maintenances(id)
 );
 
+-- =============================================
+-- 3. MÓDULO IT (SALA DE INFORMÁTICA)
+-- =============================================
+
+-- RF-06: Catálogo de equipos
+CREATE TABLE it_equipment (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  inventory_code VARCHAR(50) NOT NULL UNIQUE, -- Código interno de la empresa
+  type ENUM('PC', 'Laptop', 'Impresora', 'Servidor', 'Switch', 'Access Point','Router', 'Otro') NOT NULL,
+  brand VARCHAR(50),
+  model VARCHAR(50),
+  serial_number VARCHAR(100) UNIQUE,
+  status ENUM('operativo', 'en reparacion', 'de baja') DEFAULT 'operativo',
+  location VARCHAR(100), -- Ej: Sala de Informática, Oficina 101
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- RF-07: Catálogo de Software y Registro de Instalaciones
+CREATE TABLE software (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  version VARCHAR(50),
+  license_type VARCHAR(50), -- OEM, Retail, Suscripción
+  expiration_date DATE NULL
+);
+
+CREATE TABLE it_equipment_software (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  equipment_id INT NOT NULL,
+  software_id INT NOT NULL,
+  registered_by INT NOT NULL,
+  install_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  notes TEXT,
+  FOREIGN KEY (equipment_id) REFERENCES it_equipment(id) ON DELETE CASCADE,
+  FOREIGN KEY (software_id) REFERENCES software(id) ON DELETE CASCADE,
+  FOREIGN KEY (registered_by) REFERENCES users(id)
+);
+
+-- RF-09: Inventario de Piezas (Repuestos)
+CREATE TABLE it_parts_inventory (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  part_name VARCHAR(100) NOT NULL,
+  description TEXT,
+  stock_quantity INT DEFAULT 0,
+  min_stock INT DEFAULT 2, -- Para alertas de reabastecimiento
+  unit_price DECIMAL(10, 2) DEFAULT 0.00
+);
+
+-- RF-06 / RF-08: Registro de Mantenimiento IT (Historial)
+CREATE TABLE it_maintenance_records (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  equipment_id INT NOT NULL,
+  technician_id INT NOT NULL,
+  type ENUM('preventivo', 'correctivo') NOT NULL,
+  description TEXT NOT NULL,
+  intervention_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  cost DECIMAL(10, 2) DEFAULT 0.00,
+  FOREIGN KEY (equipment_id) REFERENCES it_equipment(id),
+  FOREIGN KEY (technician_id) REFERENCES users(id)
+);
+
+-- RF-09: Relación de piezas usadas en un mantenimiento
+CREATE TABLE it_maintenance_parts_used (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  maintenance_id INT NOT NULL,
+  part_id INT NOT NULL,
+  quantity_used INT NOT NULL,
+  FOREIGN KEY (maintenance_id) REFERENCES it_maintenance_records(id),
+  FOREIGN KEY (part_id) REFERENCES it_parts_inventory(id)
+);
+
+-- Notificaciones
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,

@@ -1,12 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hirata</title>
-    <meta http-equiv="refresh" content="0; url=login.html">
+    <title>Hirata | Cargando...</title>
 </head>
-<body>
-    <p>Redirigiendo ...</p>
+<body style="background-color: #F5F7FA; color: #002B5B; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+    
+    <p>Cargando sistema...</p>
+
+    <script>
+        const sessionActiva = localStorage.getItem('hirata_session'); 
+
+        if (sessionActiva) {
+            window.location.replace('dashboard.html'); 
+        } else {
+            window.location.replace('login.html');
+        }
+    </script>
 </body>
 </html>

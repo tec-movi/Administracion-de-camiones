@@ -12,6 +12,12 @@ import assignmentRouter from './routes/assignment.router.js'
 import notificationRouter from './routes/notification.router.js'
 import maintenanceRouter from './routes/maintenance.router.js'
 
+import equipmentRouter from './routes/it_maintenances/equipment.router.js'
+import itMaintenanceRouter from './routes/it_maintenances/itMaintenance.router.js'
+import equipmentSoftwareRouter from './routes/it_maintenances/equipmentSoftware.router.js'
+import softwareRouter from './routes/it_maintenances/software.router.js'
+import partsInventoryRouter from './routes/it_maintenances/partsInventory.router.js'
+
 const app = express()
 
 const allowedOrigins = [
@@ -48,7 +54,7 @@ app.use((req, res, next) => {
     req.session.user = data
   } catch (error) {
     if(error.message !== 'jwt expired')
-    console.log(error.message);
+    console.error(error.message);
   }
 
   next()
@@ -62,5 +68,11 @@ app.use('/api/mileageLogs', mileageRouter)
 app.use('/api/trucks', truckRouter)
 app.use('/api/notifications', notificationRouter)
 app.use('/api/maintenances', maintenanceRouter)
+
+app.use('/api/ti/equipments', equipmentRouter)
+app.use('/api/ti/maintenances', itMaintenanceRouter)
+app.use('/api/ti/equipment-software', equipmentSoftwareRouter)
+app.use('/api/ti/software', softwareRouter)
+app.use('/api/ti/parts', partsInventoryRouter)
 
 export default app

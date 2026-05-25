@@ -19,7 +19,6 @@ export default class Mileage {
       await connection.beginTransaction()
 
       // Se obtienen los datos del camión y su asignación activa
-
       const [assignmentRows] = await connection.query(
         `SELECT td.id, td.truck_id, t.plate_number, t.total_mileage, t.last_maintenance_mileage, t.maintenance_threshold, t.status
         FROM truck_driver td
@@ -56,13 +55,16 @@ export default class Mileage {
       const mileageSinceLastService = mileage_value - truck.last_maintenance_mileage
       const needsMaintenance = mileageSinceLastService >= truck.maintenance_threshold
 
-      // Actualizar solo el kilometraje total. El bloqueo operativo
-      // se controla unicamente desde maintenanceDAO.startMaintenance.
+      // Actualizar camion
       await connection.query(
         `UPDATE trucks
-        SET total_mileage = ?
+        SET total_mileage = ?, status = ?
         WHERE id = ?`,
-        [mileage_value, truck.truck_id]
+        [
+          mileage_value, 
+          needsMaintenance ? 'en mantenimiento' : 'disponible',
+          truck.truck_id
+        ]
       )
 
       // Nota: Eliminamos el cierre de asignación (active = false) al registrar kilometraje
@@ -117,6 +119,7 @@ export default class Mileage {
           mileageForNextService: Math.max(0, truck.maintenance_threshold - mileageSinceLastService)
         }
       }
+      
     } catch (error) {
       await connection.rollback()
       throw error

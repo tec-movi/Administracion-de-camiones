@@ -50,6 +50,141 @@ export const clearAlert = (element) => {
     }, 240)
 }
 
+export function initSidebarLogic(prefKey = 'sidebar_collapsed') {
+    const toggleBtnDesktop = document.getElementById('toggleSidebarBtn');
+    const toggleBtnMobile = document.getElementById('toggleSidebarBtnMobile');
+    const sidebarCol = document.getElementById('sidebarCol');
+    const sidebar = document.getElementById('admSidebar');
+    const contentCol = document.getElementById('contentCol');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const sidebarLinks = document.querySelectorAll('.adm-sidebar-link');
+    const sections = document.querySelectorAll('.adm-section');
+
+    if (!sidebarCol || !sidebar || !contentCol) return;
+
+    const isDesktop = () => window.matchMedia('(min-width: 992px)').matches;
+
+    const setDesktopSidebarState = (collapsed, persist = true) => {
+        sidebar.classList.toggle('is-collapsed', collapsed);
+        sidebarCol.classList.toggle('is-collapsed', collapsed);
+        if (toggleBtnDesktop) toggleBtnDesktop.setAttribute('aria-expanded', String(!collapsed));
+
+        if (persist) {
+            localStorage.setItem(prefKey, collapsed ? 'collapsed' : 'expanded');
+        }
+    };
+
+    const hideMobileSidebar = () => {
+        closeMobileSidebar();
+        sidebarCol.classList.add('d-none');
+    };
+
+    const openMobileSidebar = () => {
+        sidebarCol.classList.remove('d-none');
+        sidebarCol.classList.add('sidebar-mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.add('is-visible');
+        document.body.classList.add('sidebar-mobile-open');
+    };
+
+    const closeMobileSidebar = () => {
+        sidebarCol.classList.remove('sidebar-mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('is-visible');
+        document.body.classList.remove('sidebar-mobile-open');
+    };
+
+    const syncSidebarForViewport = () => {
+        if (isDesktop()) {
+            closeMobileSidebar();
+            const savedCollapsed = localStorage.getItem(prefKey) === 'collapsed';
+            setDesktopSidebarState(savedCollapsed, false);
+            return;
+        }
+
+        setDesktopSidebarState(false, false);
+        hideMobileSidebar();
+    };
+
+    const showSection = (targetId) => {
+        sections.forEach((section) => {
+            section.classList.toggle('d-none', section.id !== targetId);
+        });
+    };
+
+    sidebarLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const targetId = link.dataset.sectionTarget;
+            if (!targetId) return;
+
+            sidebarLinks.forEach((item) => item.classList.remove('active'));
+            link.classList.add('active');
+            showSection(targetId);
+
+            if (!isDesktop()) {
+                hideMobileSidebar();
+            }
+        });
+    });
+
+    if (toggleBtnDesktop) {
+        toggleBtnDesktop.addEventListener('click', () => {
+            const collapsed = !sidebar.classList.contains('is-collapsed');
+            setDesktopSidebarState(collapsed);
+        });
+    }
+
+    if (toggleBtnMobile) {
+        toggleBtnMobile.addEventListener('click', () => {
+            const isOpen = sidebarCol.classList.contains('sidebar-mobile-open');
+            if (isOpen) {
+                hideMobileSidebar();
+                return;
+            }
+            openMobileSidebar();
+        });
+    }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', () => {
+            hideMobileSidebar();
+        });
+    }
+
+    syncSidebarForViewport();
+    window.addEventListener('resize', syncSidebarForViewport);
+}
+
+export function renderSidebar(containerId, items, prefKey) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = `
+        <aside class="adm-sidebar card h-100" id="admSidebar">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3 adm-sidebar-header">
+                    <h4 class="h6 text-uppercase text-muted mb-0 adm-sidebar-title">Menú</h4>
+                    <button type="button" id="toggleSidebarBtn" class="btn btn-outline-primary btn-sm d-none d-lg-inline-flex">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+                <nav class="d-flex flex-column gap-2">
+                    ${items.map(item => `
+                        <a class="adm-sidebar-link ${item.active ? 'active' : ''}" href="#" data-section-target="${item.target}">
+                            <i class="${item.icon} me-2"></i>
+                            <span class="adm-sidebar-label">${item.label}</span>
+                        </a>
+                    `).join('')}
+                </nav>
+            </div>
+        </aside>
+    `;
+
+    // Inicializar lógica después de agregar al DOM
+    setTimeout(() => {
+    initSidebarLogic(prefKey);
+    }, 0);
+}
+
 // Muestra mensajes como toasts temporales con iconografia y animacion.
 export const setAlert = (element, message, type = "danger", duration = 5000) => {
     if (!element) return

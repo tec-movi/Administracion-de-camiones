@@ -1,4 +1,4 @@
-import { requestJson, setAlert } from "./shared.js"
+import { requestJson, setAlert, renderSidebar } from "./shared.js"
 
 // Endpoints backend usados por el módulo de administración de flota.
 const API_TRUCKS_URL = 'http://localhost:8000/api/trucks'
@@ -165,16 +165,32 @@ const registerTruck = async (event) => {
   await loadTrucks()
 }
 
-// Envía alta de conductor nuevo desde módulo de flota.
+// Envía alta de usuario nuevo desde módulo de flota.
 const registerDriver = async (event) => {
   event.preventDefault()
 
   const fullName = document.getElementById('driverFullName')?.value?.trim()
+  const roleName = document.getElementById('rol')?.value
   const email = document.getElementById('driverEmail')?.value?.trim()?.toLowerCase()
   const password = document.getElementById('driverPassword')?.value
 
-  if (!fullName || !email || !password) {
-    setDriverAlert('Completa todos los campos para registrar el conductor')
+  if (!fullName || !email || !password || !roleName) {
+    setDriverAlert('Completa todos los campos para registrar el usuario')
+    return
+  }
+
+  const roleMap = {
+    superadmin: 2,
+    admin: 1,
+    maintenance: 4,
+    it_tech: 5,
+    driver: 3
+  }
+
+  const role_id = roleMap[roleName]
+
+  if (!role_id) {
+    setDriverAlert('Selecciona un rol válido para registrar el usuario')
     return
   }
 
@@ -182,135 +198,24 @@ const registerDriver = async (event) => {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ full_name: fullName, email, password })
-  }, 'No se pudo registrar el conductor')
+    body: JSON.stringify({ full_name: fullName, email, password, role_id })
+  }, 'No se pudo registrar el usuario')
 
   if (data.status !== 'success') {
-    throw new Error(data.error || data.message || 'No se pudo registrar el conductor')
+    throw new Error(data.error || data.message || 'No se pudo registrar el usuario')
   }
 
-  setDriverAlert('Conductor registrado correctamente', 'success')
+  setDriverAlert('Usuario agregado correctamente', 'success')
   document.getElementById('newDriverForm')?.reset()
 }
 
 // Inicializa navegación lateral (secciones + colapso desktop + toggle móvil).
 const initSidebar = () => {
-  const sidebarLinks = document.querySelectorAll('.adm-sidebar-link[data-section-target]')
-  const sections = document.querySelectorAll('.adm-section')
-  const toggleBtnDesktop = document.getElementById('toggleSidebarBtn')
-  const toggleBtnMobile = document.getElementById('toggleSidebarBtnMobile')
-  const sidebarCol = document.getElementById('sidebarCol')
-  const sidebar = document.getElementById('admSidebar')
-  const contentCol = document.getElementById('contentCol')
-  const sidebarBackdrop = document.getElementById('sidebarBackdrop')
-
-  if (!sidebarCol || !sidebar || !contentCol) return
-
-  const isDesktop = () => window.matchMedia('(min-width: 992px)').matches
-
-  const setDesktopSidebarState = (collapsed, persist = true) => {
-    sidebar.classList.toggle('is-collapsed', collapsed)
-    sidebarCol.classList.toggle('is-collapsed', collapsed)
-    toggleBtnDesktop?.setAttribute('aria-expanded', String(!collapsed))
-
-    if (persist) {
-      localStorage.setItem(SIDEBAR_PREF_KEY, collapsed ? 'collapsed' : 'expanded')
-    }
-  }
-
-  const hideMobileSidebar = () => {
-    closeMobileSidebar()
-    sidebarCol.classList.add('d-none')
-  }
-
-  const openMobileSidebar = () => {
-    sidebarCol.classList.remove('d-none')
-    sidebarCol.classList.add('sidebar-mobile-open')
-    sidebarBackdrop?.classList.add('is-visible')
-    document.body.classList.add('sidebar-mobile-open')
-  }
-
-  const closeMobileSidebar = () => {
-    sidebarCol.classList.remove('sidebar-mobile-open')
-    sidebarBackdrop?.classList.remove('is-visible')
-    document.body.classList.remove('sidebar-mobile-open')
-  }
-
-  const syncSidebarForViewport = () => {
-    if (isDesktop()) {
-      closeMobileSidebar()
-      const savedCollapsed = localStorage.getItem(SIDEBAR_PREF_KEY) === 'collapsed'
-      setDesktopSidebarState(savedCollapsed, false)
-      return
-    }
-
-    setDesktopSidebarState(false, false)
-    hideMobileSidebar()
-  }
-
-  const showSection = (targetId) => {
-    sections.forEach((section) => {
-      section.classList.toggle('d-none', section.id !== targetId)
-    })
-  }
-
-  sidebarLinks.forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault()
-      const targetId = link.dataset.sectionTarget
-      if (!targetId) return
-
-      sidebarLinks.forEach((item) => item.classList.remove('active'))
-      link.classList.add('active')
-      showSection(targetId)
-
-      if (!isDesktop()) {
-        hideMobileSidebar()
-      }
-    })
-  })
-
-  if (toggleBtnDesktop && sidebarCol && sidebar && contentCol) {
-    toggleBtnDesktop.addEventListener('click', () => {
-      const collapsed = !sidebar.classList.contains('is-collapsed')
-      setDesktopSidebarState(collapsed)
-    })
-  }
-
-  if (toggleBtnMobile && sidebarCol) {
-    toggleBtnMobile.addEventListener('click', () => {
-      const isOpen = sidebarCol.classList.contains('sidebar-mobile-open')
-      if (isOpen) {
-        hideMobileSidebar()
-        return
-      }
-
-      openMobileSidebar()
-    })
-  }
-
-  sidebarBackdrop?.addEventListener('click', () => {
-    hideMobileSidebar()
-  })
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && sidebarCol.classList.contains('sidebar-mobile-open')) {
-      hideMobileSidebar()
-    }
-  })
-
-  window.addEventListener('resize', () => {
-    syncSidebarForViewport()
-  })
-
-  document.body.classList.add('sidebar-initializing')
-  syncSidebarForViewport()
-  requestAnimationFrame(() => {
-    document.body.classList.remove('sidebar-initializing')
-  })
-
-  const activeLink = document.querySelector('.adm-sidebar-link.active[data-section-target]')
-  showSection(activeLink?.dataset.sectionTarget || 'registerTruckSection')
+  renderSidebar('sidebarCol', [
+    { label: 'Registrar camión', icon: 'bi bi-truck', target: 'registerTruckSection', active: true },
+    { label: 'Camiones registrados', icon: 'bi bi-list-ul', target: 'trucksTableSection' },
+    { label: 'Agregar usuario', icon: 'bi bi-person-plus', target: 'newDriverSection' }
+  ], SIDEBAR_PREF_KEY)
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -327,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const setAssignDriverOptions = (drivers) => {
     if (!assignDriverSelect) return
 
-    assignDriverSelect.innerHTML = '<option value="">Selecciona conductor</option>'
+    assignDriverSelect.innerHTML = '<option value="" disabled selected>Selecciona conductor</option>'
 
     drivers.forEach(({ id, full_name }) => {
       const option = document.createElement('option')
@@ -428,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const newDriverForm = document.getElementById('newDriverForm')
   if (newDriverForm) {
     newDriverForm.addEventListener('submit', runAsync(registerDriver, (error) => {
-      setDriverAlert(error.message || 'Error al registrar conductor')
+      setDriverAlert(error.message || 'Error al registrar usuario')
     }))
   }
 })

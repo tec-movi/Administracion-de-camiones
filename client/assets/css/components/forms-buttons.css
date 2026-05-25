@@ -1,0 +1,56 @@
+/* =========================================
+ BOTONES & INPUTS
+========================================= */
+.btn-primary {
+    background-color: var(--hirata-azul-oscuro) !important;
+    border-color: var(--hirata-azul-oscuro) !important;
+    border-radius: var(--borde-radio);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: var(--hirata-azul-claro) !important;
+    border-color: var(--hirata-azul-claro) !important;
+    box-shadow: 0 8px 18px rgba(var(--hirata-azul-oscuro-rgb), 0.22);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.btn,
+.btn-outline-secondary,
+.form-control,
+.input-group-text,
+.form-select {
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.2);
+    min-height: 42px;
+}
+
+.form-control:focus {
+    border-color: var(--hirata-naranja);
+    box-shadow: 0 0 0 2px rgba(var(--hirata-naranja-rgb), 0.2);
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    border-color: rgba(var(--hirata-azul-oscuro-rgb), 0.3);
+}
+
+.btn-outline-secondary:active {
+    transform: translateY(1px);
+}
+
+
+/* === RESPONSIVE BOTONES === */
+@media (max-width: 991.98px) {
+    .btn {
+        min-height: 44px;
+    }
+}

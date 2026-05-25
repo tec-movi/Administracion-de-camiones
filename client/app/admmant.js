@@ -13,6 +13,25 @@ const errorAlert = document.getElementById('maintenanceError')
 const btnNewMaintenance = document.getElementById('btnNewMaintenance')
 
 let maintenanceToDelete = null
+let maintenancesCache = []
+
+// Delegación de eventos para la tabla
+maintenanceTableBody.addEventListener('click', (event) => {
+    // Buscar si hicimos clic en el botón de editar
+    const editBtn = event.target.closest('.edit-btn')
+    if (editBtn) {
+        const id = editBtn.dataset.id
+        const m = maintenancesCache.find(mnt => mnt.id == id)
+        if (m) openEditModal(m)
+        return
+    }
+
+    // Buscar si hicimos clic en el botón de eliminar
+    const deleteBtn = event.target.closest('.delete-btn')
+    if (deleteBtn) {
+        openDeleteModal(deleteBtn.dataset.id)
+    }
+})
 
 // Alerts
 const showError = (message) => {
@@ -94,14 +113,15 @@ const loadMaintenances = async () => {
         }, 'No se pudieron cargar los mantenimientos')
 
         const maintenances = Array.isArray(data.payload) ? data.payload : []
+        maintenancesCache = maintenances
         maintenanceTableBody.innerHTML = ''
 
-        if (maintenances.length === 0) {
+        if (maintenancesCache.length === 0) {
             maintenanceTableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No hay registros de mantenimiento</td></tr>'
             return
         }
 
-        maintenances.forEach(m => {
+        maintenancesCache.forEach(m => {
             const tr = document.createElement('tr')
             tr.innerHTML = `
                 <td>${m.id}</td>
@@ -122,12 +142,6 @@ const loadMaintenances = async () => {
                     </button>
                 </td>
             `
-            // Agregar event listeners a los botones
-            const editBtn = tr.querySelector('.edit-btn')
-            editBtn.addEventListener('click', () => openEditModal(m))
-            
-            const deleteBtn = tr.querySelector('.delete-btn')
-            deleteBtn.addEventListener('click', () => openDeleteModal(m.id))
 
             maintenanceTableBody.appendChild(tr)
         })
@@ -165,6 +179,9 @@ const openEditModal = (maintenance) => {
 // Abrir modal para eliminar
 const openDeleteModal = (id) => {
     maintenanceToDelete = id
+    // Limpia el alert del modal si existía de un error previo
+    const deleteAlert = document.getElementById('deleteAlert')
+    if (deleteAlert) deleteAlert.innerHTML = ''
     deleteModal.show()
 }
 
@@ -261,7 +278,12 @@ confirmDeleteBtn.addEventListener('click', async () => {
         deleteModal.hide()
         loadMaintenances()
     } catch (error) {
-        alert("Error al eliminar: " + error.message)
+        const deleteAlert = document.getElementById('deleteAlert');
+        if (deleteAlert) {
+            setAlert(deleteAlert, error.message, 'danger');
+        } else {
+            console.error("Error al eliminar (Agrega un <div id='deleteAlert'> al HTML):", error.message)
+        }
     } finally {
         maintenanceToDelete = null
         confirmDeleteBtn.disabled = false
@@ -272,4 +294,4 @@ confirmDeleteBtn.addEventListener('click', async () => {
 document.addEventListener('DOMContentLoaded', () => {
     loadTrucksForSelect()
     loadMaintenances()
-})
+});

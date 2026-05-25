@@ -51,8 +51,6 @@ const getMyTruck = async (req, res) => {
         brand: truck.brand,
         model: truck.model,
         total_mileage: truck.total_mileage,
-        last_maintenance_mileage: truck.last_maintenance_mileage,
-        maintenance_threshold: truck.maintenance_threshold,
         status: truck.status
       }
     })

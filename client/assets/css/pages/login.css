@@ -1,0 +1,81 @@
+/* css/pages/login.css */
+
+body {
+    background: url('../../img/fondologin.jpg') center/cover no-repeat;
+}
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1055;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.loading-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-card {
+    min-width: 220px;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.login-glass {
+    background: rgba(255, 255, 255, 0.58);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.login-wrapper {
+    width: min(100%, 420px);
+    padding: 0 1rem;
+}
+
+.login-card {
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.login-card .form-control,
+.login-card .btn {
+    min-height: 46px;
+}
+
+#togglePassword {
+    min-height: 46px;
+    background-color: #002B5B; /* Nota: Aquí podrías usar var(--hirata-azul-oscuro) si cargas main.css */
+    border-color: #002B5B;
+}
+
+#togglePassword:hover {
+    background-color: #2B4865;
+    border-color: #2B4865;
+}
+
+#togglePasswordIcon {
+    color: #ffffff;
+}
+
+/* === RESPONSIVE LOGIN === */
+@media (max-width: 576px) {
+    .login-wrapper {
+        padding: 0 0.875rem;
+    }
+    .login-card {
+        padding: 1.25rem;
+    }
+    .login-card h3 {
+        font-size: 1.35rem;
+    }
+}

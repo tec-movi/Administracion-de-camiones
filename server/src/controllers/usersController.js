@@ -52,9 +52,9 @@ const deleteUser = async (req, res) => {
 }
 
 export default {
+  getAvailableDrivers,
   getUser,
   getAllUsers,
-  getAvailableDrivers,
   updateUser,
   deleteUser
 }

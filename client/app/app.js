@@ -3,7 +3,7 @@ const API_CURRENT_URL = "http://localhost:8000/api/sessions/current";
 const API_LOGOUT_URL = "http://localhost:8000/api/sessions/logout"
 const API_TRUCKS_URL = "http://localhost:8000/api/trucks"
 const API_NOTIFICATIONS_URL = "http://localhost:8000/api/notifications"
-const ADMIN_NOTIFICATION_ROLES = new Set(["admin", "superadmin", "maintenance"])
+const ADMIN_NOTIFICATION_ROLES = new Set(["admin", "superadmin", "maintenance", "it_tech"])
 // Solcita cierre de sesión al backend y redirige al login correcto.
 const cerrarSesion = async () => {
     try {
@@ -102,7 +102,7 @@ const canUseAdminNotifications = (usuario) => {
 
     const path = window.location.pathname.replace(/\\/g, "/")
 
-    const isAdminView = path.includes("/module/admflota/") || path.includes("/module/admmantenimiento/")
+    const isAdminView = path.includes("/module/admflota/") || path.includes("/module/admmantenimiento/") || path.includes("/module/admin-it/")
 
     return isAdminView && ADMIN_NOTIFICATION_ROLES.has(usuario.role)
 
@@ -411,23 +411,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = getLoginPath();
         return;
     }
-    // Control de acceso por rol: cada tipo de usuario va a su módulo correspondiente.
+   // Control de acceso por rol: cada tipo de usuario va a su módulo correspondiente.
     const currentPath = window.location.pathname.replace(/\\/g, "/");
 
-    if ((usuario.role === 'admin' || usuario.role === 'superadmin') && !currentPath.includes('admflota.view.html')) {
+    // SuperAdmin -> Administración de Flota
+    if (usuario.role === 'superadmin' && !currentPath.includes('admflota.view.html')) {
         window.location.href = "../../module/admflota/admflota.view.html";
         return;
     }
 
-    if (usuario.role === 'driver' && !currentPath.includes('driver.view.html')) {
+    // Admin (Soporte TI principal) -> Admin IT
+    if (usuario.role === 'admin' && !currentPath.includes('adm-it.view.html')) {
+        window.location.href = "../../module/admin-it/adm-it.view.html";
+        return;
+    }
+
+    // Conductor -> Módulo de conductor
+    if ((usuario.role === 'conductor' || usuario.role === 'driver') && !currentPath.includes('driver.view.html')) {
         window.location.href = "../../module/driver/driver.view.html";
         return;
     }
 
-    if (usuario.role === 'maintenance' && !currentPath.includes('admmant.view.html')) {
+    // Mantenimiento -> Módulo de mecánico
+    if ((usuario.role === 'mantenimiento' || usuario.role === 'maintenance') && !currentPath.includes('admmant.view.html')) {
         window.location.href = "../../module/admmantenimiento/admmant.view.html";
         return;
     }
+
+    // Técnico IT -> Mantenimiento de Equipos
+    if (usuario.role === 'it_tech' && !currentPath.includes('it-maintenance.view.html')) {
+        window.location.href = "../../module/itmaintenance/it-maintenance.view.html";
+        return;
+    }
+
     // Completa datos de usuario en la barra superior de las vistas activas.
     initNavbarUser(usuario);
     initAdminNotifications(usuario);

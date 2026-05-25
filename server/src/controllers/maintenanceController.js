@@ -11,10 +11,7 @@ const createMaintenance = async (req, res) => {
 
 const startMaintenance = async (req, res) => {
   try {
-    const maintenance_id = req.params.maintenance_id || req.body.maintenance_id
-    if (!maintenance_id) {
-      return res.status(400).send({ status: "error", error: "maintenance_id es requerido" })
-    }
+    const { maintenance_id } = req.body
     await maintenanceService.startMaintenance(maintenance_id)
     res.send({ status: "success", message: "Mantenimiento marcado como inicado" })
   } catch (error) {

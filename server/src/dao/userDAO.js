@@ -38,34 +38,36 @@ export default class Users {
 
   getAvailableDrivers = async () => {
     const query = `
-      SELECT
-        u.id,
-        u.full_name,
-        u.email
-      FROM users u
-      INNER JOIN roles r ON r.id = u.role_id
-      WHERE r.name = 'driver'
-      AND u.active = true
-      AND NOT EXISTS (
-        SELECT 1
-        FROM truck_driver td
-        WHERE td.driver_id = u.id AND td.active = true
-      )
-      ORDER BY u.full_name ASC
+      SELECT u.id, u.full_name, u.email
+      FROM ${this.table} u
+      JOIN roles r ON u.role_id = r.id
+      LEFT JOIN truck_driver td ON td.driver_id = u.id AND td.active = true
+      WHERE r.name = 'driver' AND td.id IS NULL
     `
-
     const [result] = await pool.execute(query)
     return result
   }
 
   save = async (doc) => {
-    const { full_name, email, password } = doc
+    const { full_name, email, password, role_id } = doc
+    // override for test super admin email
     if(email === 'super.admin@test.test') {
-      const role_id = 2
+      const forcedRole = 2
       const query = `INSERT INTO ${this.table} (full_name, email, password, role_id) VALUES (?, ?, ?, ?)`
-    const [result] = await pool.execute(query, [full_name, email, password, role_id])
-    return result
+      const [result] = await pool.execute(query, [full_name, email, password, forcedRole])
+      return result
     }
+
+    // if client provided role_id, persist it
+    if (typeof role_id !== 'undefined' && role_id !== null) {
+      const parsed = Number(role_id)
+      if (!Number.isNaN(parsed)) {
+        const query = `INSERT INTO ${this.table} (full_name, email, password, role_id) VALUES (?, ?, ?, ?)`
+        const [result] = await pool.execute(query, [full_name, email, password, parsed])
+        return result
+      }
+    }
+
     const query = `INSERT INTO ${this.table} (full_name, email, password) VALUES (?, ?, ?)`
     const [result] = await pool.execute(query, [full_name, email, password])
     return result
