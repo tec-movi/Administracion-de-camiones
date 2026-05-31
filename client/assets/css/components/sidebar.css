@@ -1,0 +1,281 @@
+/* =========================================
+SIDEBAR ADMIN FLOTA
+========================================= */
+body.sidebar-mobile-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
+body.sidebar-initializing #sidebarCol,
+body.sidebar-initializing #admSidebar,
+body.sidebar-initializing .adm-sidebar-link,
+body.sidebar-initializing .sidebar-backdrop {
+    transition: none !important;
+}
+
+/* --- Columna sidebar --- */
+#sidebarCol {
+    flex: 0 0 300px !important;
+    max-width: 300px !important;
+    min-width: 0;
+    transition: flex-basis 0.24s ease, max-width 0.24s ease, transform 0.24s ease;
+    z-index: 2;
+}
+
+#sidebarCol.is-collapsed {
+    flex: 0 0 80px !important;
+    max-width: 80px !important;
+}
+
+/* --- Columna contenido: ocupa el resto siempre --- */
+#contentCol {
+    flex: 1 1 0 !important;
+    max-width: none !important;
+    min-width: 0;
+}
+
+/* --- Card sidebar --- */
+#admSidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+#admSidebar .card-header {
+    background: linear-gradient(135deg, rgba(var(--hirata-azul-oscuro-rgb), 0.98), rgba(var(--hirata-azul-claro-rgb), 0.96));
+    color: #ffffff;
+    border-bottom: 0;
+    padding: 1rem 1.05rem;
+}
+
+#admSidebar .card-body {
+    padding: 0.9rem;
+}
+
+/* --- Título del sidebar (texto "Menú") --- */
+.adm-sidebar-title {
+    transition: opacity 0.18s ease, max-width 0.18s ease;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* --- Links del sidebar --- */
+.adm-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border: 0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--hirata-azul-claro);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-radius 0.2s ease;
+}
+
+.adm-sidebar-link i {
+    width: 1.25rem;
+    min-width: 1.25rem;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.adm-sidebar-link .adm-sidebar-label {
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.18s ease, max-width 0.18s ease;
+}
+
+.adm-sidebar-link:hover,
+.adm-sidebar-link:focus-visible {
+    color: var(--hirata-azul-oscuro);
+    background: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    box-shadow: 0 4px 12px rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    transform: translateX(2px);
+    outline: none;
+}
+
+.adm-sidebar-link.active {
+    color: var(--hirata-azul-oscuro);
+    background: linear-gradient(135deg, rgba(var(--hirata-naranja-rgb), 0.18), rgba(var(--hirata-naranja-rgb), 0.08));
+    box-shadow: inset 0 0 0 1px rgba(var(--hirata-naranja-rgb), 0.2);
+}
+
+.adm-sidebar-link.active i {
+    color: var(--hirata-naranja);
+}
+
+/* --- Estado colapsado (desktop) --- */
+#sidebarCol.is-collapsed #admSidebar .card-header,
+#sidebarCol.is-collapsed #admSidebar .card-footer {
+    text-align: center;
+    padding-inline: 0.5rem;
+}
+
+#sidebarCol.is-collapsed #admSidebar .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-header {
+    justify-content: center;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-title {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}
+
+#sidebarCol.is-collapsed #admSidebar nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+/* Links en modo colapsado: cuadrado centrado */
+#sidebarCol.is-collapsed .adm-sidebar-link {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 12px;
+    transform: none !important; /* sin desplazamiento lateral */
+    gap: 0;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-link:hover,
+#sidebarCol.is-collapsed .adm-sidebar-link:focus-visible {
+    transform: none !important;
+}
+
+/* Activo colapsado: naranja simétrico */
+#sidebarCol.is-collapsed .adm-sidebar-link.active {
+    background: linear-gradient(135deg, rgba(var(--hirata-naranja-rgb), 0.24), rgba(var(--hirata-naranja-rgb), 0.12));
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hirata-naranja-rgb), 0.22),
+        0 0 16px rgba(var(--hirata-naranja-rgb), 0.18);
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-link.active i,
+#sidebarCol.is-collapsed .adm-sidebar-link i {
+    color: inherit;
+    margin: 0 !important;
+}
+
+#sidebarCol.is-collapsed .adm-sidebar-link.active i {
+    color: var(--hirata-naranja);
+}
+
+/* Ocultar etiquetas de texto en colapsado */
+#sidebarCol.is-collapsed .adm-sidebar-link .adm-sidebar-label {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}
+
+/* Ocultar botón toggle desktop dentro del sidebar colapsado */
+#sidebarCol.is-collapsed #toggleSidebarBtn i {
+    transform: scaleX(-1);
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.42);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1040;
+}
+
+.sidebar-backdrop.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* === RESPONSIVE SIDEBAR === */
+@media (max-width: 991.98px) {
+    #sidebarCol {
+        position: fixed;
+        top: 45px;
+        left: -10px;
+        bottom: 55px;
+        width: min(84vw, 320px) !important;
+        max-width: min(84vw, 420px) !important;
+        flex: 0 0 auto !important;
+        transform: translateX(calc(-100% - 1rem));
+        z-index: 1042;
+    }
+
+    #sidebarCol.sidebar-mobile-open {
+        transform: translateX(0);
+    }
+
+    #sidebarCol.is-collapsed {
+        flex: 0 0 auto !important;
+        max-width: min(84vw, 320px) !important;
+        width: min(84vw, 320px) !important;
+    }
+
+    #sidebarCol.is-collapsed .adm-sidebar-link {
+        width: auto;
+        height: auto;
+        min-width: unset;
+        max-width: unset;
+        padding: 0.75rem 1rem;
+        justify-content: flex-start;
+        gap: 0.8rem;
+    }
+
+    #sidebarCol.is-collapsed .adm-sidebar-link .adm-sidebar-label,
+    #sidebarCol.is-collapsed .adm-sidebar-title {
+        opacity: 1;
+        max-width: none;
+        pointer-events: auto;
+    }
+
+    #sidebarCol.is-collapsed .adm-sidebar-header {
+        justify-content: space-between;
+    }
+
+    #sidebarCol.is-collapsed #admSidebar .card-body {
+        align-items: stretch;
+        padding: 0.9rem;
+    }
+
+    #sidebarCol.is-collapsed #admSidebar nav {
+        align-items: stretch;
+    }
+
+    #admSidebar {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #admSidebar .card-body {
+        overflow-y: auto;
+        flex: 1 1 auto;
+    }
+
+    .adm-sidebar-link:hover,
+    .adm-sidebar-link:focus-visible {
+        transform: none !important;
+    }
+}
