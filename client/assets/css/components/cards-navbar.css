@@ -1,0 +1,72 @@
+/* =========================================
+   COMPONENTE: NAVBAR
+========================================= */
+.navbar {
+    background-color: var(--hirata-azul-oscuro) !important;
+    color: var(--texto-invertido) !important;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--borde-color);
+}
+
+/* Animación sutil para el logo */
+.navbar-brand img {
+    transition: transform 0.2s ease, max-height 0.2s ease;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.02);
+}
+
+/* Contenedor de utilidades (Lado derecho) */
+.navbar .d-flex {
+    align-items: center;
+    gap: 1rem; /* Utilizamos gap en lugar de 'me-3' para un espaciado más limpio y consistente */
+}
+
+/* Ajustes de texto y badge */
+.navbar-text {
+    font-weight: 500;
+    margin: 0 !important; /* Quitamos márgenes extra si existen */
+    color: var(--texto-invertido) !important;
+}
+
+#personajeBadge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.65em;
+    border-radius: 6px;
+}
+
+/* === RESPONSIVE NAVBAR === */
+@media (max-width: 991.98px) {
+    /* Ajustes para Tablets y Móviles grandes */
+    .navbar .d-flex {
+        gap: 0.75rem; /* Reducimos el espacio entre iconos */
+    }
+    
+    .navbar-text {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* Ajustes críticos para Móviles pequeños */
+    .navbar {
+        padding: 0.5rem;
+    }
+
+    .navbar-brand img {
+        max-height: 32px !important; /* Achicamos el logo para ganar espacio */
+    }
+
+    .navbar .d-flex {
+        gap: 0.5rem;
+    }
+
+    #nombreUsuario {
+        display: none;
+    }
+    
+    #personajeBadge {
+        display: none; /* Opcional: Ocultarlo también si falta espacio */
+    }
+}

@@ -1,0 +1,226 @@
+/* =========================================
+ BOTONES & INPUTS
+========================================= */
+.btn-primary {
+    background-color: var(--hirata-azul-oscuro) !important;
+    border-color: var(--borde-color) !important;
+    border-radius: var(--borde-radio);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: var(--hirata-azul-claro) !important;
+    border-color: var(--borde-color) !important;
+    box-shadow: 0 8px 18px rgba(var(--hirata-azul-oscuro-rgb), 0.22);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+
+
+.btn,
+.btn-outline-secondary,
+.form-control,
+.input-group-text,
+.form-select {
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.2);
+    min-height: 42px;
+}
+
+.form-control:focus {
+    border-color: var(--hirata-naranja);
+    box-shadow: 0 0 0 2px rgba(var(--hirata-naranja-rgb), 0.2);
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    border-color: rgba(var(--hirata-azul-oscuro-rgb), 0.3);
+}
+
+.btn-outline-secondary:active {
+    transform: translateY(1px);
+}
+
+
+/* === RESPONSIVE BOTONES === */
+@media (max-width: 991.98px) {
+    .btn {
+        min-height: 44px;
+    }
+}
+
+
+/* =========================================
+   MODAL: DETALLES DE MANTENIMIENTO
+========================================= */
+[data-theme="dark"] [data-action="view-maintenance-details"] {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] #maintenanceDetailsModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+/* Títulos ("Descripción" y "Piezas implementadas") */
+#maintenanceDetailsBody h2 {
+    color: var(--hirata-naranja); /* Cambia este color si quieres que destaquen distinto */
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Texto normal (La descripción en sí y el mensaje de "No se utilizaron piezas") */
+#maintenanceDetailsBody p {
+    color: var(--texto-principal);
+}
+
+/* Lista de piezas */
+#maintenanceDetailsBody ul {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+#maintenanceDetailsBody ul li {
+    color: var(--texto-principal); /* Color de la cantidad (ej. "2 unidad(es)") */
+    margin-bottom: 0.3rem;
+}
+
+/* Nombre exacto de la pieza (lo que está en negrita) */
+#maintenanceDetailsBody strong {
+    color: var(--hirata-azul-claro); /* Le da un tono azul a la pieza para separarla de la cantidad */
+}
+
+/* Líneas separadoras (<hr>) */
+#maintenanceDetailsBody hr {
+    border-color: var(--borde-color);
+    opacity: 0.6;
+    margin: 1rem 0;
+}
+
+/* taget inventario de piezas */
+[data-action="movement-out"] {
+    color: var(--texto-principal) !important;
+}
+
+
+[data-action="edit-part"] {
+    background-color: var(--texto-invertido) !important;
+}
+[data-action="edit-equipment"] {
+    background-color: var(--texto-invertido) !important;
+}
+
+/* === historial de mantenimientos === */
+.edit-btn {
+    background-color: var(--texto-invertido) !important;
+}
+
+[data-theme="dark"] #maintenanceForm .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* =========================================
+DETALLES DE INSTALACIÓN DE SOFTWARE
+========================================= */
+
+/* Títulos de las secciones (Creados como <h1> en tu JS) */
+#installationDetailsModal .modal-body h1 {
+    color: var(--hirata-naranja);
+    font-size: 1.2rem; /* Forzamos un tamaño agradable similar a un h2 */
+    margin-top: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+/* Texto normal de la información */
+#installationDetailsModal .modal-body p {
+    color: var(--texto-principal);
+    margin-bottom: 0.4rem;
+}
+
+/* Etiquetas o títulos de los campos (Lo que está en negrita ej: "Modelo:") */
+#installationDetailsModal .modal-body strong {
+    color: var(--hirata-azul-claro);
+    margin-right: 0.2rem;
+}
+
+/* Líneas separadoras divisorias (<hr>) */
+#installationDetailsModal .modal-body hr {
+    border-color: var(--borde-color);
+    opacity: 0.6;
+    margin: 1rem 0;
+}
+
+
+[data-theme="dark"] .view-installation-btn {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] #installationDetailsModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="dark"] #installationDetailsModal .modal-footer .btn-secondary {
+    color: #ffffff !important;
+}
+/* =========================================
+   CALENDARIO
+========================================= */
+
+/* Colores base */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+    color: var(--texto-principal);
+    background-color: var(--superficie-card);
+    accent-color: var(--hirata-naranja); 
+}
+
+/* 1. Activar el popup oscuro nativo del navegador */
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="time"] {
+    color-scheme: dark !important; 
+}
+
+/* 2. Reemplazar el ícono del navegador por uno SVG blanco puro */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E") !important;
+    filter: none !important; /* Quitamos cualquier filtro que lo oscurezca */
+    opacity: 1 !important;
+    cursor: pointer;
+}
+
+/* 3. Ícono Naranja para el modo Claro (Opcional, pero se ve genial) */
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f76c02'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E") !important;
+    filter: none !important;
+    cursor: pointer;
+}
+
+
+/* driver view*/
+
+
+.input-group-text {
+    background-color: rgba(var(--hirata-azul-oscuro-rgb), 0.05);
+    color: var(--texto-principal);
+    border: 1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.2);
+}
+
+
+[data-theme="dark"] .input-group-text {
+    background-color: rgba(255, 255, 255, 0.05); /* Un gris oscuro casi transparente */
+    border-color: rgba(255, 255, 255, 0.15); /* Borde sutil para que empate con el input */
+    color: var(--texto-principal);
+}

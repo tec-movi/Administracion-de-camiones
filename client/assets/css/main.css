@@ -1,0 +1,15 @@
+/* =========================================
+   ÍNDICE CSS - PROYECTO HIRATA
+========================================= */
+
+/* 1. Identidad y Base */
+@import url("variables.css");
+
+/* 2. Componentes (Interfaz) */
+@import url("components/cards-navbar.css");
+@import url("components/forms-buttons.css");
+
+/* 3. Módulos Específicos */
+@import url("components/sidebar.css");
+@import url("components/notifications.css");
+@import url("components/toasts.css");
