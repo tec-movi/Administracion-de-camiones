@@ -1,0 +1,77 @@
+/* =========================================
+   COMPONENTE: TOASTS / FEEDBACK
+========================================= */
+
+.hirata-toast-host { min-height: 12px; }
+
+.hirata-toast {
+    display:     flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap:         0.75rem;
+    padding:     0.85rem 0.95rem;
+    border-radius: 10px;
+    border:      1px solid transparent;
+    opacity:     0;
+    transform:   translateY(6px);
+    transition:  opacity 0.22s ease, transform 0.22s ease;
+}
+.hirata-toast.is-visible {
+    opacity:   1;
+    transform: translateY(0);
+}
+.hirata-toast.is-leaving {
+    opacity:   0;
+    transform: translateY(-3px);
+}
+
+.hirata-toast-content {
+    display:     flex;
+    align-items: flex-start;
+    gap:         0.6rem;
+}
+.hirata-toast-icon {
+    margin-top: 1px;
+    font-size:  1rem;
+}
+.hirata-toast-text {
+    font-size:   0.95rem;
+    line-height: 1.45;
+}
+.hirata-toast-close {
+    border:       0;
+    background:   transparent;
+    color:        inherit;
+    padding:      0.1rem;
+    min-width:    28px;
+    min-height:   28px;
+    border-radius: 6px;
+    line-height:  1;
+}
+.hirata-toast-close:hover { background: var(--fondo-hover); }
+
+/* — Variantes de color — */
+.hirata-toast-success {
+    color:        #0f5132;
+    background:   rgba(25, 135, 84, 0.12);
+    border-color: rgba(25, 135, 84, 0.24);
+}
+.hirata-toast-warning {
+    color:        #7a5200;
+    background:   rgba(var(--hirata-naranja-rgb), 0.1);
+    border-color: rgba(var(--hirata-naranja-rgb), 0.3);
+}
+.hirata-toast-danger {
+    color:        #842029;
+    background:   rgba(220, 53, 69, 0.12);
+    border-color: rgba(220, 53, 69, 0.28);
+}
+.hirata-toast-info,
+.hirata-toast-secondary {
+    color:        var(--texto-principal);
+    background:   var(--fondo-hover);
+    border-color: var(--borde-color);
+}
+
+/* Estado de procesando en botones */
+.btn.is-processing { cursor: wait; }

@@ -1,0 +1,131 @@
+/* =========================================
+   COMPONENTE: NOTIFICACIONES (DROPDOWN)
+========================================= */
+
+.nav-notification-menu {
+    width:     min(440px, 92vw);
+    max-height: 420px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius:    14px;
+    border:           1px solid var(--borde-color);
+    box-shadow:       var(--sombra-elevada);
+    background-color: var(--superficie-card);
+    color:            var(--texto-principal);
+}
+
+/* ── Confirmación de logout en navbar ── */
+.nav-logout-confirm { white-space: nowrap; }
+.nav-logout-confirm .btn { min-width: 88px; }
+
+@media (max-width: 575.98px) {
+    .nav-logout-confirm {
+        justify-content: flex-end;
+        white-space:     normal;
+        gap:             6px;
+    }
+    .nav-logout-confirm .btn {
+        min-width:    0;
+        padding-inline: 0.65rem;
+    }
+}
+
+/* ── Item individual ── */
+.nav-notification-item {
+    border:        0;
+    border-bottom: 1px solid var(--borde-color);
+    padding:       12px 16px;
+}
+.nav-notification-item:last-child { border-bottom: 0; }
+.nav-notification-item-unread     { background: var(--fondo-hover); }
+
+/* ── Layout interno (flex) ── */
+.nav-notification-item-row {
+    display:     flex;
+    flex-wrap:   nowrap;
+    align-items: flex-start;
+    gap:         12px;
+}
+
+.nav-notification-dot-wrapper {
+    width:          8px;
+    flex-shrink:    0;
+    display:        flex;
+    justify-content: center;
+    padding-top:    6px;
+}
+.nav-notification-dot {
+    width:         8px;
+    height:        8px;
+    border-radius: 50%;
+    background-color: var(--hirata-naranja);
+}
+
+/* ── Contenido de texto ── */
+.nav-notification-content {
+    flex-grow: 1;
+    min-width: 0;   /* previene que textos largos rompan el flex */
+}
+.nav-notification-content .fw-semibold,
+.nav-notification-content .text-muted {
+    word-wrap:  break-word;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+/* ── Botón cerrar (X) ── */
+.nav-notification-close-btn {
+    width:       32px;
+    height:      32px;
+    flex-shrink: 0;
+    padding:     0;
+    display:     inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Confirmación inline de "marcar como leída" ── */
+.nav-notification-confirm {
+    padding:          10px;
+    margin-top:       8px;
+    border:           1px solid var(--borde-color);
+    border-radius:    8px;
+    background-color: var(--superficie-card);
+}
+
+/* ── Responsive ── */
+@media (max-width: 991.98px) {
+    body.mobile-notifications-open {
+        overflow:     hidden;
+        touch-action: none;
+    }
+
+    .nav-notification-menu {
+        position:      fixed !important;
+        top:           65px !important;
+        left:          50% !important;
+        right:         auto !important;
+        transform:     translateX(-50%) !important;
+        width:         calc(100vw - 32px) !important;
+        max-width:     400px;
+        max-height:    calc(100dvh - 90px) !important;
+        margin-top:    0;
+        border-radius: 12px;
+        box-shadow:    var(--sombra-elevada);
+    }
+    .nav-notification-menu .border-bottom {
+        position:         sticky;
+        top:              0;
+        z-index:          10;
+        background:       var(--superficie-card);
+        border-top-left-radius:  12px;
+        border-top-right-radius: 12px;
+    }
+    .nav-notification-confirm-actions {
+        display:        flex;
+        flex-direction: row;
+        gap:            8px;
+        margin-top:     8px;
+    }
+}

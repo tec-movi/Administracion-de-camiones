@@ -1,0 +1,194 @@
+/* =========================================
+   COMPONENTE: BOTONES
+========================================= */
+
+.btn,
+.btn-outline-secondary,
+.form-control,
+.input-group-text,
+.form-select {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--hirata-azul-oscuro) !important;
+    border-color:     var(--borde-color) !important;
+    border-radius:    var(--borde-radio);
+    transition:       all 0.2s ease-in-out;
+}
+.btn-primary:hover {
+    background-color: var(--hirata-azul-claro) !important;
+    border-color:     var(--borde-color) !important;
+    box-shadow: 0 8px 18px rgba(var(--hirata-azul-oscuro-rgb), 0.22);
+}
+.btn-primary:active { transform: translateY(1px); box-shadow: none; }
+
+.btn-outline-secondary:hover {
+    background-color: rgba(var(--hirata-azul-oscuro-rgb), 0.08);
+    border-color:     rgba(var(--hirata-azul-oscuro-rgb), 0.3);
+}
+.btn-outline-secondary:active { transform: translateY(1px); }
+
+@media (max-width: 991.98px) {
+    .btn { min-height: 44px; }
+}
+
+/* =========================================
+   COMPONENTE: FORM-CONTROL (inputs)
+========================================= */
+
+.form-control {
+    border-radius: 8px;
+    border:        1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.2);
+    min-height:    42px;
+}
+.form-control:focus {
+    border-color: var(--hirata-naranja);
+    box-shadow:   0 0 0 2px rgba(var(--hirata-naranja-rgb), 0.2);
+}
+
+/* =========================================
+   COMPONENTE: CALENDARIO (date/time inputs)
+   Sobreescrituras de estilos nativos del navegador
+========================================= */
+
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+    color:            var(--texto-principal);
+    background-color: var(--superficie-card);
+    accent-color:     var(--hirata-naranja);
+}
+
+/* Popup nativo en modo oscuro */
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="time"] {
+    color-scheme: dark !important;
+}
+
+/* Ícono blanco en modo oscuro */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E") !important;
+    filter:  none !important;
+    opacity: 1 !important;
+    cursor:  pointer;
+}
+
+/* Ícono naranja en modo claro */
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f76c02'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E") !important;
+    filter: none !important;
+    cursor: pointer;
+}
+
+/* =========================================
+   VISTA: INVENTARIO DE PIEZAS (adm-it)
+   Acciones de la tabla de piezas
+========================================= */
+
+/* Botón de salida de stock */
+[data-action="movement-out"] {
+    color: var(--texto-principal) !important;
+}
+
+/* Botones editar (piezas y equipos): fondo blanco/claro para contraste */
+[data-action="edit-part"],
+[data-action="edit-equipment"] {
+    background-color: var(--texto-invertido) !important;
+}
+
+/* =========================================
+   VISTA: HISTORIAL DE MANTENIMIENTOS (admmant)
+   Botón editar en la tabla
+========================================= */
+
+.edit-btn {
+    background-color: var(--texto-invertido) !important;
+}
+
+/* Btn-close del modal de mantenimiento en modo oscuro */
+[data-theme="dark"] #maintenanceForm .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* =========================================
+   MODAL: DETALLES DE MANTENIMIENTO (adm-it)
+========================================= */
+
+/* Botón "ver detalles" en modo oscuro */
+[data-theme="dark"] [data-action="view-maintenance-details"] {
+    color: #ffffff !important;
+}
+[data-theme="dark"] #maintenanceDetailsModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Títulos de sección dentro del modal */
+#maintenanceDetailsBody h2 {
+    color:       var(--hirata-naranja);
+    font-size:   1.2rem;
+    margin-top:  0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Texto descriptivo y mensajes vacíos */
+#maintenanceDetailsBody p { color: var(--texto-principal); }
+
+/* Lista de piezas utilizadas */
+#maintenanceDetailsBody ul { margin-bottom: 0; padding-left: 1.2rem; }
+#maintenanceDetailsBody ul li {
+    color:         var(--texto-principal);
+    margin-bottom: 0.3rem;
+}
+
+/* Nombre de pieza en negrita */
+#maintenanceDetailsBody strong { color: var(--hirata-azul-claro); }
+
+/* Separadores */
+#maintenanceDetailsBody hr {
+    border-color: var(--borde-color);
+    opacity:      0.6;
+    margin:       1rem 0;
+}
+
+/* =========================================
+   MODAL: DETALLES DE INSTALACIÓN DE SOFTWARE
+   (it-maintenance)
+========================================= */
+
+/* Títulos de sección (generados como <h1> desde JS) */
+#installationDetailsModal .modal-body h1 {
+    color:         var(--hirata-naranja);
+    font-size:     1.2rem;
+    margin-top:    0.5rem;
+    margin-bottom: 0.8rem;
+}
+#installationDetailsModal .modal-body p {
+    color:         var(--texto-principal);
+    margin-bottom: 0.4rem;
+}
+#installationDetailsModal .modal-body strong {
+    color:        var(--hirata-azul-claro);
+    margin-right: 0.2rem;
+}
+#installationDetailsModal .modal-body hr {
+    border-color: var(--borde-color);
+    opacity:      0.6;
+    margin:       1rem 0;
+}
+
+/* Modo oscuro: botón ver instalación, btn-close y botón cerrar */
+[data-theme="dark"] .view-installation-btn {
+    color: #ffffff !important;
+}
+[data-theme="dark"] #installationDetailsModal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+[data-theme="dark"] #installationDetailsModal .modal-footer .btn-secondary {
+    color: #ffffff !important;
+}

@@ -1,0 +1,66 @@
+/* =========================================
+   COMPONENTE: NAVBAR
+========================================= */
+
+.navbar {
+    background-color: var(--hirata-azul-oscuro) !important;
+    color:            var(--texto-invertido) !important;
+    padding:          0.75rem 1rem;
+    border-bottom:    1px solid var(--borde-color);
+}
+
+/* Animación sutil para el logo */
+.navbar-brand img { transition: transform 0.2s ease, max-height 0.2s ease; }
+.navbar-brand:hover img { transform: scale(1.02); }
+
+/* Contenedor de utilidades (lado derecho) */
+.navbar .d-flex {
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-text {
+    font-weight: 500;
+    margin:      0 !important;
+    color:       var(--texto-invertido) !important;
+}
+
+#personajeBadge {
+    font-size:     0.85rem;
+    padding:       0.4em 0.65em;
+    border-radius: 6px;
+}
+
+/* =========================================
+   COMPONENTE: INPUT-GROUP (sufijos km, etc.)
+========================================= */
+
+.input-group-text {
+    background-color: rgba(var(--hirata-azul-oscuro-rgb), 0.05);
+    color:            var(--texto-principal);
+    border:           1px solid rgba(var(--hirata-azul-oscuro-rgb), 0.2);
+}
+
+/* Modo oscuro: fondo semi-transparente para que empate con el input */
+[data-theme="dark"] .input-group-text {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color:     rgba(255, 255, 255, 0.15) !important;
+    color:            var(--texto-principal) !important;
+}
+
+/* =========================================
+   RESPONSIVE — NAVBAR
+========================================= */
+
+@media (max-width: 991.98px) {
+    .navbar .d-flex  { gap: 0.75rem; }
+    .navbar-text     { font-size: 0.9rem; }
+}
+
+@media (max-width: 575.98px) {
+    .navbar          { padding: 0.5rem; }
+    .navbar-brand img { max-height: 32px !important; }
+    .navbar .d-flex  { gap: 0.5rem; }
+    #nombreUsuario   { display: none; }
+    #personajeBadge  { display: none; }
+}

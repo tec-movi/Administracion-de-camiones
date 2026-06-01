@@ -1,0 +1,14 @@
+/* =========================================
+   ÍNDICE CSS — PROYECTO HIRATA
+   Orden de importación: tokens → componentes globales → módulos
+========================================= */
+
+/* 1. Tokens de diseño, base global y modo oscuro */
+@import url("variables.css");
+
+/* 2. Componentes de interfaz compartidos */
+@import url("components/cards-navbar.css");
+@import url("components/forms-buttons.css");
+@import url("components/sidebar.css");
+@import url("components/notifications.css");
+@import url("components/toasts.css");
