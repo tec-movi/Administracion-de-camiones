@@ -110,6 +110,9 @@ body.login-page {
 .toggle-btn .moon i {
     color: var(--hirata-azul-oscuro) !important;
 }
+[data-theme="dark"] .login-page {
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../../img/fondologin.webp') center/cover no-repeat;
+}
 
 
 
